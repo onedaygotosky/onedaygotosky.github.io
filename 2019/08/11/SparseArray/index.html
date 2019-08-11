@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.2.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.2.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.2.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.2.0" color="#222">
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/main.css?v=7.2.0">
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.2.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    search: {
+      root: '/',
+      path: ''
+    },
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: 'Copy',
+      copy_success: 'Copied',
+      copy_failure: 'Copy failed'
+    }
+  };
+</script>
+
+  <meta name="description" content="引言在Android开发中，当需要存储键值对时，一般都是用java自带的HashMap。但是细心的同学可能会发现，有时候如果实际的HashMap的key-vaule中的key是Integer时，AndroidStudio会提示一个warnning，具体是说推荐使用SparseArray替代HashMap：   虽然说warnning不影响实际功能，但是有个warnning放在那里总让人不爽。因为是">
+<meta name="keywords" content="android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SparseArray完全解读">
+<meta property="og:url" content="http://yoursite.com/2019/08/11/SparseArray/index.html">
+<meta property="og:site_name" content="wuyi">
+<meta property="og:description" content="引言在Android开发中，当需要存储键值对时，一般都是用java自带的HashMap。但是细心的同学可能会发现，有时候如果实际的HashMap的key-vaule中的key是Integer时，AndroidStudio会提示一个warnning，具体是说推荐使用SparseArray替代HashMap：   虽然说warnning不影响实际功能，但是有个warnning放在那里总让人不爽。因为是">
+<meta property="og:locale" content="zh">
+<meta property="og:image" content="http://yoursite.com/2019/08/11/SparseArray/warnning.png">
+<meta property="og:image" content="http://yoursite.com/2019/08/11/SparseArray/hashmap.png">
+<meta property="og:image" content="http://yoursite.com/2019/08/11/SparseArray/SparseArray.png">
+<meta property="og:updated_time" content="2019-08-11T15:47:00.730Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SparseArray完全解读">
+<meta name="twitter:description" content="引言在Android开发中，当需要存储键值对时，一般都是用java自带的HashMap。但是细心的同学可能会发现，有时候如果实际的HashMap的key-vaule中的key是Integer时，AndroidStudio会提示一个warnning，具体是说推荐使用SparseArray替代HashMap：   虽然说warnning不影响实际功能，但是有个warnning放在那里总让人不爽。因为是">
+<meta name="twitter:image" content="http://yoursite.com/2019/08/11/SparseArray/warnning.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="http://yoursite.com/2019/08/11/SparseArray/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  
+  <title>SparseArray完全解读 | wuyi</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">wuyi</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">功不唐捐</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/11/SparseArray/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="author">
+      <meta itemprop="description" content="description">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="wuyi">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">SparseArray完全解读
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-08-11 23:00:55 / Modified: 23:47:00" itemprop="dateCreated datePublished" datetime="2019-08-11T23:00:55+08:00">2019-08-11</time>
+            </span>
+          
+
+          
+            
+
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/android/" itemprop="url" rel="index"><span itemprop="name">android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+          
+
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>在Android开发中，当需要存储键值对时，一般都是用java自带的HashMap。但是细心的同学可能会发现，有时候如果实际的HashMap的key-vaule中的key是Integer时，AndroidStudio会提示一个warnning，具体是说推荐使用<a href="https://developer.android.com/reference/android/util/SparseArray" target="_blank" rel="noopener">SparseArray</a>替代HashMap：</p>
+<img src="/2019/08/11/SparseArray/warnning.png" title="warnning">
+
+<p>虽然说warnning不影响实际功能，但是有个warnning放在那里总让人不爽。因为是lint静态扫描报的，可以用<code>@SuppressLint(&quot;UseSparseArrays&quot;)</code>忽略掉。但是既然google特地出了这么一个类用来替代key为Integer的HashMap，那是不是真的比HashMap更好用？</p>
+<h2 id="优缺点"><a href="#优缺点" class="headerlink" title="优缺点"></a>优缺点</h2><blockquote>
+<p>It is intended to be more memory efficient than using a HashMap to map Integers to Objects, both because it avoids auto-boxing keys and its data structure doesn’t rely on an extra entry object for each mapping.</p>
+</blockquote>
+<p>源码的注释除了提到SparseArray有节约自动装箱开销的优点外，还提到SparseArray因为少了需要Map.Entry&lt;K, V&gt;作为辅助的存储结构引入的内存开销。</p>
+<p>因为Map&lt;K, V&gt;的泛型声明，key必须是Integer不能是int，所以确实会带来自动装箱的问题。</p>
+<p>这两个优点都是让SparseArray<code>more memory efficient</code>的，这是因为SparseArray的诞生就是针对某些Android设备内存比较紧张的情况的。</p>
+<p>但是一般来说，SparseArray是比Hashmap慢的，在数据集大小只有上百个的时候，差别不大。</p>
+<h1 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h1><p>不管是HashMap还是SpareArray，他们的作用都是维护一组逻辑上的key-value的对应关系。那么，在这组关系上最常做的操作就是存和取了。</p>
+<h2 id="存-取"><a href="#存-取" class="headerlink" title="存/取"></a>存/取</h2><p>HashMap的存操作和取操作分别对应方法<code>put(K key, V value)</code>和<code>get(Object key)</code>，大概用过HashMap的没有不知道这两个方法的。而SpareArray对的两个方法分别是<code>put(int key, E value)</code>和<code>get(int key)</code>，和HashMap的方法看起来几乎没有区别，key为Integer的hashmap的相关代码可以无缝换成SpareArray。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">SparseArray&lt;String&gt; sparseArray = <span class="keyword">new</span> SparseArray&lt;&gt;();</span><br><span class="line">sparseArray.put(<span class="number">200</span>, <span class="string">"firstValue"</span>);</span><br><span class="line">sparseArray.put(<span class="number">100</span>, <span class="string">"secondValue"</span>);</span><br><span class="line">System.out.println(sparseArray.get(<span class="number">100</span>));</span><br><span class="line"></span><br><span class="line">输出：</span><br><span class="line">&gt;&gt; secondValue</span><br><span class="line"></span><br><span class="line">HashMap&lt;Integer, String&gt; hashMap = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">hashMap.put(<span class="number">200</span>, <span class="string">"firstValue"</span>);</span><br><span class="line">hashMap.put(<span class="number">100</span>, <span class="string">"secondValue"</span>);</span><br><span class="line">System.out.println(hashMap.get(<span class="number">100</span>));</span><br><span class="line"></span><br><span class="line">输出：</span><br><span class="line">&gt;&gt; secondValue</span><br></pre></td></tr></table></figure>
+
+<h2 id="遍历"><a href="#遍历" class="headerlink" title="遍历"></a>遍历</h2><p>SpareArray的遍历要稍微麻烦些。</p>
+<p>首先先建立一个概念，SparseArray执行put的时候其实是按照key的大小有序插入的。简单来说，SparseArray维护了各个键值对的排序关系，具体的规则是以key升序排列。所以不同于HashMap只能通过key查找value，Sparse还能通过index查找value(或者key)，方法是<code>valueAt(int index)</code>(或者<code>keyAt(int index)</code>)。这里的index是升序排序中键值对的位置，index是SparseArray相比Map多出来的概念，看了后面的源码实现分析就好理解了。</p>
+<p>拿上面的代码举例，put了key为100和200的两个键值对，size为2，<code>200-&quot;firstValue&quot;</code>这对key-value对在index 0的位置，<code>100-&quot;secondValue&quot;</code>这对键值对在index 1的位置。顺序是根据key的大小排的，跟put的先后顺序无关。所以valueAt(0)拿到的是<code>&quot;secondValue&quot;</code>。</p>
+<p>具体的遍历代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> index = <span class="number">0</span>; index &lt; sparseArray.size(); index++) &#123;</span><br><span class="line">    System.out.println(String.format(<span class="string">"key: %d, value: %s"</span>, sparseArray.keyAt(index), sparseArray.valueAt(index)));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">输出：</span><br><span class="line">&gt;&gt; key: <span class="number">100</span>, secondValue</span><br><span class="line">&gt;&gt; key: <span class="number">200</span>, firstValue</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (Map.Entry&lt;Integer, String&gt; entry : hashMap.entrySet()) &#123;</span><br><span class="line">    System.out.println(String.format(<span class="string">"key: %d, value: %s"</span>, entry.getKey(), entry.getValue()));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">输出：</span><br><span class="line">&gt;&gt; key: <span class="number">100</span>, secondValue</span><br><span class="line">&gt;&gt; key: <span class="number">200</span>, firstValue</span><br></pre></td></tr></table></figure>
+
+<h1 id="实现细节"><a href="#实现细节" class="headerlink" title="实现细节"></a>实现细节</h1><h2 id="和hashmap比较"><a href="#和hashmap比较" class="headerlink" title="和hashmap比较"></a>和hashmap比较</h2><p>大致讲下hashmao的原理。hashmap使用key的hashcode来决定entry的存放位置，解决hash冲突使用的开散列方法，所以hashmap的底层数据结构看起来是一个链表的数组，链表的节点是包含了key和value的Entry类。看起来就像下图：</p>
+<img src="/2019/08/11/SparseArray/hashmap.png" title="hashmap">
+
+<p>而SparseArray的底层数据结构更简单，只有<code>int[] mKeys</code>和<code>Object[] mValues</code>两个数组。那这里就有个问题了：不同于HashMap专门用一个Entry的类存放key跟value，SpareArray里key和value分别存放在两个数组里，那key和value是怎么对应上的？</p>
+<p>答案就是，是根据index对应的，mKeys和mValues中index一样的key和value就是相互对应的。所以SparseArray实际存储的数据看起来是这样的：</p>
+<img src="/2019/08/11/SparseArray/SparseArray.png" title="SparseArray">
+
+<p>HashMap中基于Entry建立的key-value对应关系会导致Entry占用内存，而sparse基于index的对应关系是逻辑的，节省下了Entry类的内存，这又是SparseArray的一个优点。</p>
+<h2 id="存-取-1"><a href="#存-取-1" class="headerlink" title="存/取"></a>存/取</h2><p>前面提到，SparseArray中实际存储的数据是有序的。那么保证有序的关键就在每次的存和删操作中：在原本有序的情况下，保证存和删操作后还是有序的。</p>
+<p>看存操作的实现，注释说明了关键点：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">put</span><span class="params">(<span class="keyword">int</span> key, E value)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 二分查找找到这次插入的key应该插入哪个位置可以保持整个结构的有序</span></span><br><span class="line">    <span class="keyword">int</span> i = ContainerHelpers.binarySearch(mKeys, mSize, key);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (i &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// &gt;=0表示在mKeys的前size个元素中找到了key</span></span><br><span class="line">        mValues[i] = value;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// &lt;0在mKeys的前size个元素中没找到key（前面没有放过这个key的话就会找不到）</span></span><br><span class="line">        <span class="comment">// 不过返回的i的绝对值表示了key应该放在这个index以保持操作后的数组依然有序</span></span><br><span class="line">        i = ~i;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 本次数据应该放入的位置是可用的，直接使用(这个key被标记删除了)</span></span><br><span class="line">        <span class="keyword">if</span> (i &lt; mSize &amp;&amp; mValues[i] == DELETED) &#123;</span><br><span class="line">            mKeys[i] = key;</span><br><span class="line">            mValues[i] = value;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (mGarbage &amp;&amp; mSize &gt;= mKeys.length) &#123;</span><br><span class="line">            <span class="comment">// 真正删除前面标记删除的数据，具体下面会讲到</span></span><br><span class="line">            gc();</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Search again because indices may have changed.</span></span><br><span class="line">            <span class="comment">// gc可能改变了底层存储数据的数组的结构，再二分查找一次index</span></span><br><span class="line">            i = ~ContainerHelpers.binarySearch(mKeys, mSize, key);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 真正放入数据，如果mKeys和mValues的长度比i小，会引起扩容</span></span><br><span class="line">        <span class="comment">// 扩容相关的逻辑看下面分析</span></span><br><span class="line">        mKeys = GrowingArrayUtils.insert(mKeys, mSize, i, key);</span><br><span class="line">        mValues = GrowingArrayUtils.insert(mValues, mSize, i, value);</span><br><span class="line">        mSize++;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以保证所有存储的数据都是有序排列的关键就在于每次插入的时候如何确定插入的新数据插入的位置。上面看到每次确定实际插入的位置是基于二分查找确定的。举个例子：</p>
+<ul>
+<li>原先的数据是mIndexs = {1, 4, 6, 8}，size为4</li>
+<li>要插入的key是7</li>
+<li>第一次二分查找返回的index是-3，说明现在的数据中没有这个index，这个key应该被插入index为3的位置</li>
+<li>调用GrowingArrayUtils.insert将7插入index为3的位置，实际会引发mKeys扩容到8，原先的key8往右移</li>
+<li>最后的数据是mIndexs = {1, 4, 6 ,7, 8}，保持了有序</li>
+</ul>
+<p>取的过程很简单，同样是根据二分查找找到如果有这个key的话它应该在哪个位置，如果找到的index&lt;0反过来就证明了没有这个key：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> E <span class="title">get</span><span class="params">(<span class="keyword">int</span> key, E valueIfKeyNotFound)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i = ContainerHelpers.binarySearch(mKeys, mSize, key);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (i &lt; <span class="number">0</span> || mValues[i] == DELETED) &#123;</span><br><span class="line">        <span class="keyword">return</span> valueIfKeyNotFound;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> (E) mValues[i];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>HashMap的取操作在hash分桶时时间复杂度为O(1)，但是在发生hash冲突的时候最后会在链表中顺序查找，而SparseArray的取操作完全依赖于二分查找，时间复杂度理论上总是O(nlogn)，没有hash冲突导致访问慢的问题；不过HashMap的hash冲突一般很少，总体来说SparseArray总是比HashMap慢些；而且二分查找的时间复杂度也决定了SparseArray不适合大量数据的场景。</p>
+<h2 id="删-gc"><a href="#删-gc" class="headerlink" title="删/gc"></a>删/gc</h2><p>SparseArray删除数据是通过<code>delete(int key)</code>方法删除的。在删除一条数据的时候，不是直接执行实际的删除操作，而是先把要删除的数据标记为<code>DELETE</code>状态，在需要获取size、扩容、取数据的时候，会执行<code>gc</code>，一次性真正把前面标记的所有删除数据删掉。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">delete</span><span class="params">(<span class="keyword">int</span> key)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i = ContainerHelpers.binarySearch(mKeys, mSize, key);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (i &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (mValues[i] != DELETED) &#123;</span><br><span class="line">            mValues[i] = DELETED;</span><br><span class="line">            mGarbage = <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>gc的过程有点类似虚拟机的gc中的标记整理算法。具体就是遍历所有数据，收集所有没有被删除的数据移动到最前面。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">gc</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> n = mSize;</span><br><span class="line">    <span class="keyword">int</span> o = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span>[] keys = mKeys;</span><br><span class="line">    Object[] values = mValues;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line">        Object val = values[i];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (val != DELETED) &#123;</span><br><span class="line">            <span class="keyword">if</span> (i != o) &#123;</span><br><span class="line">                keys[o] = keys[i];</span><br><span class="line">                values[o] = val;</span><br><span class="line">                values[i] = <span class="keyword">null</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            o++;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    mGarbage = <span class="keyword">false</span>;</span><br><span class="line">    mSize = o;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样做的好处有两个：</p>
+<ul>
+<li>如果在刚delete了一条数据后又放了一条相同key的数据进来，这条数据因为被覆盖了后面也不用执行真正的gc了，节省了操作时间</li>
+<li>如果一次性delete多条数据，可以把真正的删除操作放在一次gc中而不是多次gc中，节省时间</li>
+</ul>
+<h2 id="扩容-缩容"><a href="#扩容-缩容" class="headerlink" title="扩容/缩容"></a>扩容/缩容</h2><p>前面提到，在put数据的时候可能会引发扩容。扩容的时机很简单，当底层的数组没有空余的空间存放新的数据时就会引发扩容。扩容的算法很简单，基本上就是翻倍，<code>GrowingArrayUtils#growSize</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">growSize</span><span class="params">(<span class="keyword">int</span> currentSize)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> currentSize &lt;= <span class="number">4</span> ? <span class="number">8</span> : currentSize * <span class="number">2</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不过需要注意的是，growSize算出来size不一定是扩容操作后真正的size，因为扩容时新的数组是调用<code>ArrayUtils#newUnpaddedArray</code>生成新数组的，这个方法涉及内存对齐，实际返回的数组的size一般比要求的大小要大。</p>
+<p>SparseArray是<strong>没有</strong>缩容机制的。假如前面存了大量的数据导致数组扩容到了1024，哪怕调用<code>clear</code>清空所有数据底层数组的大小还是1024。所以先存放大量数据在删到只剩少量需要长期持有的数据场景下，用SpareArray可能会导致空间的浪费。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ul>
+<li>建议使用SparseArray替换HashMap是因为得益于下面几点，SparseArray可能比HashMap更节省内存，而某些android设备上内存是紧缺资源：<ul>
+<li>避免了Integer的自动装箱</li>
+<li>基于index建立的key和value的映射关系相比Map基于Entry结构建立key和value的映射关系节约内存</li>
+<li>某些场景如hash冲突下访问速度可能优于hashmap；不适合数据集比较大的场景。</li>
+</ul>
+</li>
+<li>SparseArray没有缩容机制。某些场景下不适合使用，比如：大量地put后大量地delete，然后长久持有SparseArray，导致大量的空位置没法被虚拟机gc，浪费内存</li>
+<li>SparseArray一般来说比Hashmap慢，因为二分查找比较慢，而且插入删除数据涉及数组的copy。在数据集不大时不明显</li>
+<li>SparseArray每次插入删除数据都保证了所有存储数据的排列有序</li>
+<li>SparseArray可以通过index定位数据，Hashmap不行</li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+      
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        
+          
+        
+        <div class="post-tags">
+          
+            <a href="/tags/android/" rel="tag"># android</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/02/measure/" rel="next" title="view的绘制过程(一)——measure">
+                <i class="fa fa-chevron-left"></i> view的绘制过程(一)——measure
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  
+  <p class="site-author-name" itemprop="name">author</p>
+  <div class="site-description motion-element" itemprop="description">description</div>
+</div>
+
+
+  <nav class="site-state motion-element">
+    
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+    
+
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+        
+        
+          
+        
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">categories</span>
+        
+      </div>
+    
+
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        
+        
+          
+        
+          
+        
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">tags</span>
+        
+      </div>
+    
+  </nav>
+
+
+
+
+
+
+
+
+
+
+
+
+
+          
+          
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#引言"><span class="nav-number">1.</span> <span class="nav-text">引言</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#优缺点"><span class="nav-number">1.1.</span> <span class="nav-text">优缺点</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用"><span class="nav-number">2.</span> <span class="nav-text">使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#存-取"><span class="nav-number">2.1.</span> <span class="nav-text">存/取</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#遍历"><span class="nav-number">2.2.</span> <span class="nav-text">遍历</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实现细节"><span class="nav-number">3.</span> <span class="nav-text">实现细节</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#和hashmap比较"><span class="nav-number">3.1.</span> <span class="nav-text">和hashmap比较</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#存-取-1"><span class="nav-number">3.2.</span> <span class="nav-text">存/取</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#删-gc"><span class="nav-number">3.3.</span> <span class="nav-text">删/gc</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#扩容-缩容"><span class="nav-number">3.4.</span> <span class="nav-text">扩容/缩容</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">author</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.2.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+
+
+  <script src="/js/utils.js?v=7.2.0"></script>
+
+  <script src="/js/motion.js?v=7.2.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.2.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.2.0"></script>
+<script src="/js/post-details.js?v=7.2.0"></script>
+
+
+
+  <script src="/js/next-boot.js?v=7.2.0"></script>
+
+  
+
+  
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+</body>
+</html>

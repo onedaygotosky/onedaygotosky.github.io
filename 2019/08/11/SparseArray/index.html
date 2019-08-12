@@ -110,7 +110,7 @@
 <meta property="og:image" content="http://yoursite.com/2019/08/11/SparseArray/warnning.png">
 <meta property="og:image" content="http://yoursite.com/2019/08/11/SparseArray/hashmap.png">
 <meta property="og:image" content="http://yoursite.com/2019/08/11/SparseArray/SparseArray.png">
-<meta property="og:updated_time" content="2019-08-11T15:47:00.730Z">
+<meta property="og:updated_time" content="2019-08-12T02:35:25.657Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SparseArray完全解读">
 <meta name="twitter:description" content="引言在Android开发中，当需要存储键值对时，一般都是用java自带的HashMap。但是细心的同学可能会发现，有时候如果实际的HashMap的key-vaule中的key是Integer时，AndroidStudio会提示一个warnning，具体是说推荐使用SparseArray替代HashMap：   虽然说warnning不影响实际功能，但是有个warnning放在那里总让人不爽。因为是">
@@ -337,13 +337,23 @@
                 
               
 
-              <time title="Created: 2019-08-11 23:00:55 / Modified: 23:47:00" itemprop="dateCreated datePublished" datetime="2019-08-11T23:00:55+08:00">2019-08-11</time>
+              <time title="Created: 2019-08-11 23:00:55" itemprop="dateCreated datePublished" datetime="2019-08-11T23:00:55+08:00">2019-08-11</time>
             </span>
           
 
           
             
 
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-08-12 10:35:25" itemprop="dateModified" datetime="2019-08-12T10:35:25+08:00">2019-08-12</time>
+              </span>
             
           
 
@@ -432,6 +442,7 @@
 <li>调用GrowingArrayUtils.insert将7插入index为3的位置，实际会引发mKeys扩容到8，原先的key8往右移</li>
 <li>最后的数据是mIndexs = {1, 4, 6 ,7, 8}，保持了有序</li>
 </ul>
+<p>其实实际插入数据的过程类似于优化后的插入排序，确定了插入的位置后把这个位置后面的数据移动一位，然后把新数据放入空出来的位置。</p>
 <p>取的过程很简单，同样是根据二分查找找到如果有这个key的话它应该在哪个位置，如果找到的index&lt;0反过来就证明了没有这个key：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> E <span class="title">get</span><span class="params">(<span class="keyword">int</span> key, E valueIfKeyNotFound)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i = ContainerHelpers.binarySearch(mKeys, mSize, key);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (i &lt; <span class="number">0</span> || mValues[i] == DELETED) &#123;</span><br><span class="line">        <span class="keyword">return</span> valueIfKeyNotFound;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> (E) mValues[i];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 

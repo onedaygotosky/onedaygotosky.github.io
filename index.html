@@ -4,98 +4,54 @@
 
 
 
-
-
-
-
-
-
-
-  
-
-
-<html class="theme-next muse use-motion" lang="zh">
-<head><meta name="generator" content="Hexo 3.9.0">
+<html lang="zh">
+<head>
   <meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
 
-
-
-
-
-
-
-
-
-
-
-
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.2.0">
-
-
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.2.0">
-
-
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.2.0">
-
-
-  <link rel="mask-icon" href="/images/logo.svg?v=7.2.0" color="#222">
-
-
-
-
-
-
-<link rel="stylesheet" href="/css/main.css?v=7.2.0">
-
-
-
-
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
 
 
 <link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
 
 
-
-
-
-
-
-
-<script id="hexo.configurations">
+<script id="hexo-configurations">
   var NexT = window.NexT || {};
   var CONFIG = {
     root: '/',
     scheme: 'Muse',
-    version: '7.2.0',
+    version: '7.4.0',
+    exturl: false,
     sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
-    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
     copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
     fancybox: false,
     mediumzoom: false,
     lazyload: false,
     pangu: false,
     algolia: {
-      applicationID: '',
+      appID: '',
       apiKey: '',
       indexName: '',
       hits: {"per_page":10},
       labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
     },
     localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
-    search: {
-      root: '/',
-      path: ''
-    },
-    tabs: true,
+    path: '',
     motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
     translation: {
       copy_button: 'Copy',
       copy_success: 'Copied',
       copy_failure: 'Copy failed'
-    }
+    },
+    sidebarPadding: 40
   };
 </script>
 
@@ -109,24 +65,20 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="wuyi">
 <meta name="twitter:description" content="description">
-
-
-
-
-
-  
-  
   <link rel="canonical" href="http://yoursite.com/">
 
 
-
-<script id="page.configurations">
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
+    isHome: true,
+    isPost: false,
+    isPage: false,
+    isArchive: false
   };
 </script>
 
-  
   <title>wuyi</title>
   
 
@@ -137,13 +89,8 @@
 
 
 
-
-
-
-
   <noscript>
   <style>
-  .use-motion .motion-element,
   .use-motion .brand,
   .use-motion .menu-item,
   .sidebar-inner,
@@ -152,7 +99,7 @@
   .use-motion .comments,
   .use-motion .post-header,
   .use-motion .post-body,
-  .use-motion .collection-title { opacity: initial; }
+  .use-motion .collection-header { opacity: initial; }
 
   .use-motion .logo,
   .use-motion .site-title,
@@ -169,34 +116,22 @@
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh">
-
-  
-  
-    
-  
-
-  <div class="container sidebar-position-left 
-  page-home">
+  <div class="container use-motion">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-wrapper">
+      <div class="header-inner"><div class="site-brand-container">
   <div class="site-meta">
-    
 
-    <div class="custom-logo-site-title">
+    <div>
       <a href="/" class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
         <span class="site-title">wuyi</span>
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
-    
-      
         <p class="site-subtitle">功不唐捐</p>
       
-    
-    
   </div>
 
   <div class="site-nav-toggle">
@@ -209,86 +144,57 @@
 </div>
 
 
-
 <nav class="site-nav">
   
-    <ul id="menu" class="menu">
+  <ul id="menu" class="menu">
+      
+      
       
         
-        
-        
-          
-          <li class="menu-item menu-item-home menu-item-active">
-
-    
-    
+        <li class="menu-item menu-item-home">
       
-    
-
     
 
     <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
 
   </li>
-        
-        
-        
-          
-          <li class="menu-item menu-item-archives">
-
-    
-    
       
-    
-
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
     
 
     <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
 
   </li>
+  </ul>
 
-      
-      
-    </ul>
-  
-
-  
     
 
-  
-
-  
 </nav>
-
-
-
 </div>
     </header>
 
     
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
 
 
     <main id="main" class="main">
       <div class="main-inner">
         <div class="content-wrap">
-          
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
-    
-        
-
+  <div id="posts" class="posts-expand">
+        <article itemscope itemtype="http://schema.org/Article">
   
   
   
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
+  <div class="post-block home">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/18/touchEvent/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -300,35 +206,19 @@
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="wuyi">
     </span>
-
-    
       <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/2019/08/18/touchEvent/" class="post-title-link" itemprop="url">Android touch事件分发详解</a>
-              
+        <h1 class="post-title" itemprop="name headline">
             
-          </h1>
-        
+            <a href="/2019/08/18/touchEvent/" class="post-title-link" itemprop="url">Android touch事件分发详解</a>
+          
+        </h1>
 
         <div class="post-meta">
-
-          
-          
-          
-
-          
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
+              <span class="post-meta-item-text">Posted on</span>
 
               
                 
@@ -337,8 +227,6 @@
               <time title="Created: 2019-08-18 14:00:55" itemprop="dateCreated datePublished" datetime="2019-08-18T14:00:55+08:00">2019-08-18</time>
             </span>
           
-
-          
             
 
             
@@ -346,22 +234,16 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
+                <span class="post-meta-item-text">Edited on</span>
                 <time title="Modified: 2019-08-20 00:11:21" itemprop="dateModified" datetime="2019-08-20T00:11:21+08:00">2019-08-20</time>
               </span>
             
-          
-
           
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
               </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
+              <span class="post-meta-item-text">In</span>
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/android/" itemprop="url" rel="index"><span itemprop="name">android</span></a></span>
 
@@ -372,22 +254,9 @@
           
 
           
-          
-
-          
-
-          
-
-          <br>
-          
-
-          
-
-          
 
         </div>
       </header>
-    
 
     
     
@@ -395,12 +264,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-      
-
-      
-        
-          
-            <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>Android开发主要是在智能手机上，而智能手机基本都是触屏手机，用户的交互绝大部分都是通过触碰屏幕完成的，所以Android的View体系中touch事件的传递处理机制就是重中之重。列表跟着手指移动方向滑动、按钮响应点击，这些都是因为touch事件正确传递给了这些View，它们才能做出响应。</p>
+          <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>Android开发主要是在智能手机上，而智能手机基本都是触屏手机，用户的交互绝大部分都是通过触碰屏幕完成的，所以Android的View体系中touch事件的传递处理机制就是重中之重。列表跟着手指移动方向滑动、按钮响应点击，这些都是因为touch事件正确传递给了这些View，它们才能做出响应。</p>
 <p>我们知道所有界面都是基于View和ViewGroup的，结构上是一层一层组织的：</p>
 <img src="/2019/08/18/touchEvent/viewHierarchy.png" title="viewHierarchy">
 
@@ -521,40 +385,17 @@
 <li>主要关注<code>onInterceptTouchEvent</code>、<code>dispatchTouchEvent</code>、<code>onTouchEvent</code>三个方法</li>
 </ul>
 
-          
         
       
     </div>
 
     
-
-    
-
     
     
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
   </div>
   
   
@@ -562,19 +403,11 @@
   </article>
 
     
-        
-
+        <article itemscope itemtype="http://schema.org/Article">
   
   
   
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
+  <div class="post-block home">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/11/SparseArray/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -586,35 +419,19 @@
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="wuyi">
     </span>
-
-    
       <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/2019/08/11/SparseArray/" class="post-title-link" itemprop="url">SparseArray完全解读</a>
-              
+        <h1 class="post-title" itemprop="name headline">
             
-          </h1>
-        
+            <a href="/2019/08/11/SparseArray/" class="post-title-link" itemprop="url">SparseArray完全解读</a>
+          
+        </h1>
 
         <div class="post-meta">
-
-          
-          
-          
-
-          
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
+              <span class="post-meta-item-text">Posted on</span>
 
               
                 
@@ -623,8 +440,6 @@
               <time title="Created: 2019-08-11 23:00:55" itemprop="dateCreated datePublished" datetime="2019-08-11T23:00:55+08:00">2019-08-11</time>
             </span>
           
-
-          
             
 
             
@@ -632,22 +447,16 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
+                <span class="post-meta-item-text">Edited on</span>
                 <time title="Modified: 2019-08-12 10:35:25" itemprop="dateModified" datetime="2019-08-12T10:35:25+08:00">2019-08-12</time>
               </span>
             
-          
-
           
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
               </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
+              <span class="post-meta-item-text">In</span>
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/android/" itemprop="url" rel="index"><span itemprop="name">android</span></a></span>
 
@@ -658,22 +467,9 @@
           
 
           
-          
-
-          
-
-          
-
-          <br>
-          
-
-          
-
-          
 
         </div>
       </header>
-    
 
     
     
@@ -681,12 +477,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-      
-
-      
-        
-          
-            <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>在Android开发中，当需要存储键值对时，一般都是用java自带的HashMap。但是细心的同学可能会发现，有时候如果实际的HashMap的key-vaule中的key是Integer时，AndroidStudio会提示一个warnning，具体是说推荐使用<a href="https://developer.android.com/reference/android/util/SparseArray" target="_blank" rel="noopener">SparseArray</a>替代HashMap：</p>
+          <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>在Android开发中，当需要存储键值对时，一般都是用java自带的HashMap。但是细心的同学可能会发现，有时候如果实际的HashMap的key-vaule中的key是Integer时，AndroidStudio会提示一个warnning，具体是说推荐使用<a href="https://developer.android.com/reference/android/util/SparseArray" target="_blank" rel="noopener">SparseArray</a>替代HashMap：</p>
 <img src="/2019/08/11/SparseArray/warnning.png" title="warnning">
 
 <p>虽然说warnning不影响实际功能，但是有个warnning放在那里总让人不爽。因为是lint静态扫描报的，可以用<code>@SuppressLint(&quot;UseSparseArrays&quot;)</code>忽略掉。但是既然google特地出了这么一个类用来替代key为Integer的HashMap，那是不是真的比HashMap更好用？</p>
@@ -761,40 +552,17 @@
 <li>SparseArray可以通过index定位数据，Hashmap不行</li>
 </ul>
 
-          
         
       
     </div>
 
     
-
-    
-
     
     
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
   </div>
   
   
@@ -802,19 +570,11 @@
   </article>
 
     
-        
-
+        <article itemscope itemtype="http://schema.org/Article">
   
   
   
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
+  <div class="post-block home">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/measure/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -826,35 +586,19 @@
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="wuyi">
     </span>
-
-    
       <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/2019/08/02/measure/" class="post-title-link" itemprop="url">view的绘制过程(一)——measure</a>
-              
+        <h1 class="post-title" itemprop="name headline">
             
-          </h1>
-        
+            <a href="/2019/08/02/measure/" class="post-title-link" itemprop="url">view的绘制过程(一)——measure</a>
+          
+        </h1>
 
         <div class="post-meta">
-
-          
-          
-          
-
-          
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
+              <span class="post-meta-item-text">Posted on</span>
 
               
                 
@@ -863,21 +607,15 @@
               <time title="Created: 2019-08-02 00:00:55 / Modified: 01:06:39" itemprop="dateCreated datePublished" datetime="2019-08-02T00:00:55+08:00">2019-08-02</time>
             </span>
           
-
-          
             
 
             
-          
-
           
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
               </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
+              <span class="post-meta-item-text">In</span>
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/android/" itemprop="url" rel="index"><span itemprop="name">android</span></a></span>
 
@@ -888,22 +626,9 @@
           
 
           
-          
-
-          
-
-          
-
-          <br>
-          
-
-          
-
-          
 
         </div>
       </header>
-    
 
     
     
@@ -911,12 +636,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-      
-
-      
-        
-          
-            <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>Android中的整个UI体系中，对于客户端开发来说最重要的就是View类。所有诸如TextView、ImageView之类的常用系统控件都是继承自View，View是所有展示在屏幕上的元素的抽象，重要性不言而喻。</p>
+          <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>Android中的整个UI体系中，对于客户端开发来说最重要的就是View类。所有诸如TextView、ImageView之类的常用系统控件都是继承自View，View是所有展示在屏幕上的元素的抽象，重要性不言而喻。</p>
 <p>开发中，当碰到系统提供的控件不能满足展示需求的情况，需要实现自定义View；不光是自定义View这种比较高阶的应用，当界面比较复杂的时候，如果不能深刻理解整个绘制过程，实际显示效果可能跟想象大相径庭。</p>
 <p>对绘制过程有过一定了解的一定都知道View的整个绘制过程可以分为measure、layout、draw三个步骤。作为系列文章的第一篇，本篇文章将讲解绘制过程的第一步，<strong>measure</strong>过程。</p>
 <h2 id="measure具体做什么"><a href="#measure具体做什么" class="headerlink" title="measure具体做什么"></a>measure具体做什么</h2><p>measure就是决定各个View具体应该多大的过程。知道了每个View应该多大，才能进行下面的layout布局操作和draw绘制到屏幕操作。一个View的大小受它父容器大小的影响，一个容器实际的大小也受它的子View实际大小的影响。</p>
@@ -1038,40 +758,17 @@
 <li>对于一个View来说，它最终的measureSpec受父容器的measureSpec和自身的layoutParams共同影响。</li>
 </ul>
 
-          
         
       
     </div>
 
     
-
-    
-
     
     
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
   </div>
   
   
@@ -1079,19 +776,11 @@
   </article>
 
     
-        
-
+        <article itemscope itemtype="http://schema.org/Article">
   
   
   
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
+  <div class="post-block home">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/12/04/otto/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1103,35 +792,19 @@
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="wuyi">
     </span>
-
-    
       <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/2018/12/04/otto/" class="post-title-link" itemprop="url">Android事件总线——otto介绍和源码解读</a>
-              
+        <h1 class="post-title" itemprop="name headline">
             
-          </h1>
-        
+            <a href="/2018/12/04/otto/" class="post-title-link" itemprop="url">Android事件总线——otto介绍和源码解读</a>
+          
+        </h1>
 
         <div class="post-meta">
-
-          
-          
-          
-
-          
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-calendar-o"></i>
               </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
+              <span class="post-meta-item-text">Posted on</span>
 
               
                 
@@ -1140,8 +813,6 @@
               <time title="Created: 2018-12-04 00:24:28" itemprop="dateCreated datePublished" datetime="2018-12-04T00:24:28+08:00">2018-12-04</time>
             </span>
           
-
-          
             
 
             
@@ -1149,22 +820,16 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
-                
-                  <span class="post-meta-item-text">Edited on</span>
-                
+                <span class="post-meta-item-text">Edited on</span>
                 <time title="Modified: 2019-08-20 00:20:56" itemprop="dateModified" datetime="2019-08-20T00:20:56+08:00">2019-08-20</time>
               </span>
             
-          
-
           
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
               </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
+              <span class="post-meta-item-text">In</span>
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/android/" itemprop="url" rel="index"><span itemprop="name">android</span></a></span>
 
@@ -1175,22 +840,9 @@
           
 
           
-          
-
-          
-
-          
-
-          <br>
-          
-
-          
-
-          
 
         </div>
       </header>
-    
 
     
     
@@ -1198,12 +850,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-      
-
-      
-        
-          
-            <h1 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h1><h2 id="从监听者模式说起"><a href="#从监听者模式说起" class="headerlink" title="从监听者模式说起"></a>从监听者模式说起</h2><p>在写代码的场景中，我们经常碰到“希望当发生某种情况能触发一段逻辑”的需求。拿Android举例，最常见的例子就是当某个按钮被点击时，做一段逻辑。</p>
+          <h1 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h1><h2 id="从监听者模式说起"><a href="#从监听者模式说起" class="headerlink" title="从监听者模式说起"></a>从监听者模式说起</h2><p>在写代码的场景中，我们经常碰到“希望当发生某种情况能触发一段逻辑”的需求。拿Android举例，最常见的例子就是当某个按钮被点击时，做一段逻辑。</p>
 <p>如果说让事件处理的一方决定触发的时机，那只能不断轮询看是否发生了点击事件来决定触发逻辑了，显然是行不通的。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span>(<span class="keyword">true</span>) &#123;</span><br><span class="line">	<span class="keyword">if</span> (view.isClick()) &#123;</span><br><span class="line">		<span class="comment">// do something</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -1288,40 +935,17 @@
 <li>可以注册一个监听DeadEvent事件的方法，打印log，以发现某个发送事件没有监听者的情况。</li>
 </ul>
 
-          
         
       
     </div>
 
     
-
-    
-
     
     
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
   </div>
   
   
@@ -1329,7 +953,7 @@
   </article>
 
     
-  </section>
+  </div>
 
   
 
@@ -1338,7 +962,6 @@
           
 
         </div>
-        
           
   
   <div class="sidebar-toggle">
@@ -1349,25 +972,29 @@
     </div>
   </div>
 
-  <aside id="sidebar" class="sidebar">
+  <aside class="sidebar">
     <div class="sidebar-inner">
 
-      
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
 
-      
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
 
-      <div class="site-overview-wrap sidebar-panel sidebar-panel-active">
-        <div class="site-overview">
-
-          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
   <p class="site-author-name" itemprop="name">author</p>
-  <div class="site-description motion-element" itemprop="description">description</div>
+  <div class="site-description" itemprop="description">description</div>
 </div>
-
-
   <nav class="site-state motion-element">
-    
       <div class="site-state-item site-state-posts">
         
           <a href="/archives/">
@@ -1377,32 +1004,18 @@
         </a>
       </div>
     
-
-    
       
       
       <div class="site-state-item site-state-categories">
-        
-        
-        
-          
         
         <span class="site-state-item-count">1</span>
         <span class="site-state-item-name">categories</span>
         
       </div>
     
-
-    
       
       
       <div class="site-state-item site-state-tags">
-        
-        
-        
-          
-        
-          
         
         <span class="site-state-item-count">2</span>
         <span class="site-state-item-name">tags</span>
@@ -1413,31 +1026,13 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-          
-          
-        </div>
       </div>
-
-      
-
-      
 
     </div>
   </aside>
   <div id="sidebar-dimmer"></div>
 
 
-        
       </div>
     </main>
 
@@ -1448,27 +1043,16 @@
     <i class="fa fa-user"></i>
   </span>
   <span class="author" itemprop="copyrightHolder">author</span>
-
-  
-
-  
 </div>
-
-
   <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
-
-
-
   <span class="post-meta-divider">|</span>
-
-
-
-  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.2.0</div>
-
-
-
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.4.0</div>
 
         
+
+
+
+
 
 
 
@@ -1480,123 +1064,45 @@
         
       </div>
     </footer>
-
-    
-      <div class="back-to-top">
-        <i class="fa fa-arrow-up"></i>
-        
-      </div>
-    
-
-    
-
-    
-
-    
-
   </div>
 
   
 
-<script>
-  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
-    window.Promise = null;
-  }
-</script>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-
-
-
-
-
-
-
-
-
-  
-  <script src="/lib/jquery/index.js?v=3.4.1"></script>
-
-  
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
   <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
-
-  
   <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
-
-
-
-
-  <script src="/js/utils.js?v=7.2.0"></script>
-
-  <script src="/js/motion.js?v=7.2.0"></script>
-
-
-
-  
-  
-
-
-  <script src="/js/schemes/muse.js?v=7.2.0"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
 
 
 
   
 
-  <script src="/js/next-boot.js?v=7.2.0"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   
 
   
-
-  
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   
 

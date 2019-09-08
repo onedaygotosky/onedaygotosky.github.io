@@ -55,13 +55,13 @@
   };
 </script>
 
-  <meta name="description" content="引言在Android开发中，当需要存储键值对时，一般都是用java自带的HashMap。但是细心的同学可能会发现，有时候如果实际的HashMap的key-vaule中的key是Integer时，AndroidStudio会提示一个warnning，具体是说推荐使用SparseArray替代HashMap：   虽然说warnning不影响实际功能，但是有个warnning放在那里总让人不爽。因为是">
+  <meta name="description" content="引言在Android开发中，当需要存储键值对时，一般都是用java自带的HashMap。但是细心的同学可能会发现，有时候如果实际的HashMap的key-vaule中的key是Integer时，AndroidStudio会提示一个warnning，具体是说推荐使用SparseArray替代HashMap：">
 <meta name="keywords" content="android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="SparseArray完全解读">
 <meta property="og:url" content="http://yoursite.com/2019/08/11/SparseArray/index.html">
-<meta property="og:site_name" content="wuyi">
-<meta property="og:description" content="引言在Android开发中，当需要存储键值对时，一般都是用java自带的HashMap。但是细心的同学可能会发现，有时候如果实际的HashMap的key-vaule中的key是Integer时，AndroidStudio会提示一个warnning，具体是说推荐使用SparseArray替代HashMap：   虽然说warnning不影响实际功能，但是有个warnning放在那里总让人不爽。因为是">
+<meta property="og:site_name" content="无异说">
+<meta property="og:description" content="引言在Android开发中，当需要存储键值对时，一般都是用java自带的HashMap。但是细心的同学可能会发现，有时候如果实际的HashMap的key-vaule中的key是Integer时，AndroidStudio会提示一个warnning，具体是说推荐使用SparseArray替代HashMap：">
 <meta property="og:locale" content="zh">
 <meta property="og:image" content="http://yoursite.com/2019/08/11/SparseArray/warnning.png">
 <meta property="og:image" content="http://yoursite.com/2019/08/11/SparseArray/hashmap.png">
@@ -69,7 +69,7 @@
 <meta property="og:updated_time" content="2019-08-12T02:35:25.657Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SparseArray完全解读">
-<meta name="twitter:description" content="引言在Android开发中，当需要存储键值对时，一般都是用java自带的HashMap。但是细心的同学可能会发现，有时候如果实际的HashMap的key-vaule中的key是Integer时，AndroidStudio会提示一个warnning，具体是说推荐使用SparseArray替代HashMap：   虽然说warnning不影响实际功能，但是有个warnning放在那里总让人不爽。因为是">
+<meta name="twitter:description" content="引言在Android开发中，当需要存储键值对时，一般都是用java自带的HashMap。但是细心的同学可能会发现，有时候如果实际的HashMap的key-vaule中的key是Integer时，AndroidStudio会提示一个warnning，具体是说推荐使用SparseArray替代HashMap：">
 <meta name="twitter:image" content="http://yoursite.com/2019/08/11/SparseArray/warnning.png">
   <link rel="canonical" href="http://yoursite.com/2019/08/11/SparseArray/">
 
@@ -85,7 +85,7 @@
   };
 </script>
 
-  <title>SparseArray完全解读 | wuyi</title>
+  <title>SparseArray完全解读 | 无异说</title>
   
 
 
@@ -132,7 +132,7 @@
     <div>
       <a href="/" class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
-        <span class="site-title">wuyi</span>
+        <span class="site-title">无异说</span>
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
@@ -205,13 +205,13 @@
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/11/SparseArray/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="author">
-      <meta itemprop="description" content="description">
+      <meta itemprop="name" content="无异">
+      <meta itemprop="description" content="程序员进行时">
       <meta itemprop="image" content="/images/avatar.gif">
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="wuyi">
+      <meta itemprop="name" content="无异说">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">SparseArray完全解读
@@ -270,7 +270,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>在Android开发中，当需要存储键值对时，一般都是用java自带的HashMap。但是细心的同学可能会发现，有时候如果实际的HashMap的key-vaule中的key是Integer时，AndroidStudio会提示一个warnning，具体是说推荐使用<a href="https://developer.android.com/reference/android/util/SparseArray" target="_blank" rel="noopener">SparseArray</a>替代HashMap：</p>
+        <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>在Android开发中，当需要存储键值对时，一般都是用java自带的HashMap。但是细心的同学可能会发现，有时候如果实际的HashMap的key-vaule中的key是Integer时，AndroidStudio会提示一个warnning，具体是说推荐使用<a href="https://developer.android.com/reference/android/util/SparseArray" target="_blank" rel="noopener">SparseArray</a>替代HashMap：</p><a id="more"></a>
 <img src="/2019/08/11/SparseArray/warnning.png" title="warnning">
 
 <p>虽然说warnning不影响实际功能，但是有个warnning放在那里总让人不爽。因为是lint静态扫描报的，可以用<code>@SuppressLint(&quot;UseSparseArrays&quot;)</code>忽略掉。但是既然google特地出了这么一个类用来替代key为Integer的HashMap，那是不是真的比HashMap更好用？</p>
@@ -437,8 +437,8 @@
 
       <div class="site-overview-wrap sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  <p class="site-author-name" itemprop="name">author</p>
-  <div class="site-description" itemprop="description">description</div>
+  <p class="site-author-name" itemprop="name">无异</p>
+  <div class="site-description" itemprop="description">程序员进行时</div>
 </div>
   <nav class="site-state motion-element">
       <div class="site-state-item site-state-posts">
@@ -488,7 +488,7 @@
   <span class="with-love" id="animate">
     <i class="fa fa-user"></i>
   </span>
-  <span class="author" itemprop="copyrightHolder">author</span>
+  <span class="author" itemprop="copyrightHolder">无异</span>
 </div>
   <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
   <span class="post-meta-divider">|</span>

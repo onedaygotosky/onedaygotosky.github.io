@@ -55,20 +55,20 @@
   };
 </script>
 
-  <meta name="description" content="引言Android中的整个UI体系中，对于客户端开发来说最重要的就是View类。所有诸如TextView、ImageView之类的常用系统控件都是继承自View，View是所有展示在屏幕上的元素的抽象，重要性不言而喻。 开发中，当碰到系统提供的控件不能满足展示需求的情况，需要实现自定义View；不光是自定义View这种比较高阶的应用，当界面比较复杂的时候，如果不能深刻理解整个绘制过程，实际显示效果">
+  <meta name="description" content="引言Android中的整个UI体系中，对于客户端开发来说最重要的就是View类。所有诸如TextView、ImageView之类的常用系统控件都是继承自View，View是所有展示在屏幕上的元素的抽象，重要性不言而喻。开发中，当碰到系统提供的控件不能满足展示需求的情况，需要实现自定义View；不光是自定义View这种比较高阶的应用，当界面比较复杂的时候，如果不能深刻理解整个绘制过程，实际显示效果可">
 <meta name="keywords" content="android,view">
 <meta property="og:type" content="article">
 <meta property="og:title" content="view的绘制过程(一)——measure">
 <meta property="og:url" content="http://yoursite.com/2019/08/02/measure/index.html">
-<meta property="og:site_name" content="wuyi">
-<meta property="og:description" content="引言Android中的整个UI体系中，对于客户端开发来说最重要的就是View类。所有诸如TextView、ImageView之类的常用系统控件都是继承自View，View是所有展示在屏幕上的元素的抽象，重要性不言而喻。 开发中，当碰到系统提供的控件不能满足展示需求的情况，需要实现自定义View；不光是自定义View这种比较高阶的应用，当界面比较复杂的时候，如果不能深刻理解整个绘制过程，实际显示效果">
+<meta property="og:site_name" content="无异说">
+<meta property="og:description" content="引言Android中的整个UI体系中，对于客户端开发来说最重要的就是View类。所有诸如TextView、ImageView之类的常用系统控件都是继承自View，View是所有展示在屏幕上的元素的抽象，重要性不言而喻。开发中，当碰到系统提供的控件不能满足展示需求的情况，需要实现自定义View；不光是自定义View这种比较高阶的应用，当界面比较复杂的时候，如果不能深刻理解整个绘制过程，实际显示效果可">
 <meta property="og:locale" content="zh">
 <meta property="og:image" content="http://yoursite.com/2019/08/02/measure/viewHierarchy.png">
 <meta property="og:image" content="http://yoursite.com/2019/08/02/measure/window.png">
 <meta property="og:updated_time" content="2019-08-01T17:06:39.466Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="view的绘制过程(一)——measure">
-<meta name="twitter:description" content="引言Android中的整个UI体系中，对于客户端开发来说最重要的就是View类。所有诸如TextView、ImageView之类的常用系统控件都是继承自View，View是所有展示在屏幕上的元素的抽象，重要性不言而喻。 开发中，当碰到系统提供的控件不能满足展示需求的情况，需要实现自定义View；不光是自定义View这种比较高阶的应用，当界面比较复杂的时候，如果不能深刻理解整个绘制过程，实际显示效果">
+<meta name="twitter:description" content="引言Android中的整个UI体系中，对于客户端开发来说最重要的就是View类。所有诸如TextView、ImageView之类的常用系统控件都是继承自View，View是所有展示在屏幕上的元素的抽象，重要性不言而喻。开发中，当碰到系统提供的控件不能满足展示需求的情况，需要实现自定义View；不光是自定义View这种比较高阶的应用，当界面比较复杂的时候，如果不能深刻理解整个绘制过程，实际显示效果可">
 <meta name="twitter:image" content="http://yoursite.com/2019/08/02/measure/viewHierarchy.png">
   <link rel="canonical" href="http://yoursite.com/2019/08/02/measure/">
 
@@ -84,7 +84,7 @@
   };
 </script>
 
-  <title>view的绘制过程(一)——measure | wuyi</title>
+  <title>view的绘制过程(一)——measure | 无异说</title>
   
 
 
@@ -131,7 +131,7 @@
     <div>
       <a href="/" class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
-        <span class="site-title">wuyi</span>
+        <span class="site-title">无异说</span>
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
@@ -204,13 +204,13 @@
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/measure/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="author">
-      <meta itemprop="description" content="description">
+      <meta itemprop="name" content="无异">
+      <meta itemprop="description" content="程序员进行时">
       <meta itemprop="image" content="/images/avatar.gif">
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="wuyi">
+      <meta itemprop="name" content="无异说">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">view的绘制过程(一)——measure
@@ -261,8 +261,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>Android中的整个UI体系中，对于客户端开发来说最重要的就是View类。所有诸如TextView、ImageView之类的常用系统控件都是继承自View，View是所有展示在屏幕上的元素的抽象，重要性不言而喻。</p>
-<p>开发中，当碰到系统提供的控件不能满足展示需求的情况，需要实现自定义View；不光是自定义View这种比较高阶的应用，当界面比较复杂的时候，如果不能深刻理解整个绘制过程，实际显示效果可能跟想象大相径庭。</p>
+        <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>Android中的整个UI体系中，对于客户端开发来说最重要的就是View类。所有诸如TextView、ImageView之类的常用系统控件都是继承自View，View是所有展示在屏幕上的元素的抽象，重要性不言而喻。</p><p>开发中，当碰到系统提供的控件不能满足展示需求的情况，需要实现自定义View；不光是自定义View这种比较高阶的应用，当界面比较复杂的时候，如果不能深刻理解整个绘制过程，实际显示效果可能跟想象大相径庭。</p><a id="more"></a>
+
 <p>对绘制过程有过一定了解的一定都知道View的整个绘制过程可以分为measure、layout、draw三个步骤。作为系列文章的第一篇，本篇文章将讲解绘制过程的第一步，<strong>measure</strong>过程。</p>
 <h2 id="measure具体做什么"><a href="#measure具体做什么" class="headerlink" title="measure具体做什么"></a>measure具体做什么</h2><p>measure就是决定各个View具体应该多大的过程。知道了每个View应该多大，才能进行下面的layout布局操作和draw绘制到屏幕操作。一个View的大小受它父容器大小的影响，一个容器实际的大小也受它的子View实际大小的影响。</p>
 <h1 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h1><p>首先先厘清几个概念。</p>
@@ -477,8 +477,8 @@
 
       <div class="site-overview-wrap sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  <p class="site-author-name" itemprop="name">author</p>
-  <div class="site-description" itemprop="description">description</div>
+  <p class="site-author-name" itemprop="name">无异</p>
+  <div class="site-description" itemprop="description">程序员进行时</div>
 </div>
   <nav class="site-state motion-element">
       <div class="site-state-item site-state-posts">
@@ -528,7 +528,7 @@
   <span class="with-love" id="animate">
     <i class="fa fa-user"></i>
   </span>
-  <span class="author" itemprop="copyrightHolder">author</span>
+  <span class="author" itemprop="copyrightHolder">无异</span>
 </div>
   <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
   <span class="post-meta-divider">|</span>

@@ -55,13 +55,13 @@
   };
 </script>
 
-  <meta name="description" content="引言Android开发主要是在智能手机上，而智能手机基本都是触屏手机，用户的交互绝大部分都是通过触碰屏幕完成的，所以Android的View体系中touch事件的传递处理机制就是重中之重。列表跟着手指移动方向滑动、按钮响应点击，这些都是因为touch事件正确传递给了这些View，它们才能做出响应。 我们知道所有界面都是基于View和ViewGroup的，结构上是一层一层组织的：   而且整个Vie">
+  <meta name="description" content="引言Android开发主要是在智能手机上，而智能手机基本都是触屏手机，用户的交互绝大部分都是通过触碰屏幕完成的，所以Android的View体系中touch事件的传递处理机制就是重中之重。列表跟着手指移动方向滑动、按钮响应点击，这些都是因为touch事件正确传递给了这些View，它们才能做出响应。我们知道所有界面都是基于View和ViewGroup的，结构上是一层一层组织的：">
 <meta name="keywords" content="android">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Android touch事件分发详解">
 <meta property="og:url" content="http://yoursite.com/2019/08/18/touchEvent/index.html">
-<meta property="og:site_name" content="wuyi">
-<meta property="og:description" content="引言Android开发主要是在智能手机上，而智能手机基本都是触屏手机，用户的交互绝大部分都是通过触碰屏幕完成的，所以Android的View体系中touch事件的传递处理机制就是重中之重。列表跟着手指移动方向滑动、按钮响应点击，这些都是因为touch事件正确传递给了这些View，它们才能做出响应。 我们知道所有界面都是基于View和ViewGroup的，结构上是一层一层组织的：   而且整个Vie">
+<meta property="og:site_name" content="无异说">
+<meta property="og:description" content="引言Android开发主要是在智能手机上，而智能手机基本都是触屏手机，用户的交互绝大部分都是通过触碰屏幕完成的，所以Android的View体系中touch事件的传递处理机制就是重中之重。列表跟着手指移动方向滑动、按钮响应点击，这些都是因为touch事件正确传递给了这些View，它们才能做出响应。我们知道所有界面都是基于View和ViewGroup的，结构上是一层一层组织的：">
 <meta property="og:locale" content="zh">
 <meta property="og:image" content="http://yoursite.com/2019/08/18/touchEvent/viewHierarchy.png">
 <meta property="og:image" content="http://yoursite.com/2019/08/18/touchEvent/demo.jpg">
@@ -69,7 +69,7 @@
 <meta property="og:updated_time" content="2019-08-19T16:11:21.490Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Android touch事件分发详解">
-<meta name="twitter:description" content="引言Android开发主要是在智能手机上，而智能手机基本都是触屏手机，用户的交互绝大部分都是通过触碰屏幕完成的，所以Android的View体系中touch事件的传递处理机制就是重中之重。列表跟着手指移动方向滑动、按钮响应点击，这些都是因为touch事件正确传递给了这些View，它们才能做出响应。 我们知道所有界面都是基于View和ViewGroup的，结构上是一层一层组织的：   而且整个Vie">
+<meta name="twitter:description" content="引言Android开发主要是在智能手机上，而智能手机基本都是触屏手机，用户的交互绝大部分都是通过触碰屏幕完成的，所以Android的View体系中touch事件的传递处理机制就是重中之重。列表跟着手指移动方向滑动、按钮响应点击，这些都是因为touch事件正确传递给了这些View，它们才能做出响应。我们知道所有界面都是基于View和ViewGroup的，结构上是一层一层组织的：">
 <meta name="twitter:image" content="http://yoursite.com/2019/08/18/touchEvent/viewHierarchy.png">
   <link rel="canonical" href="http://yoursite.com/2019/08/18/touchEvent/">
 
@@ -85,7 +85,7 @@
   };
 </script>
 
-  <title>Android touch事件分发详解 | wuyi</title>
+  <title>Android touch事件分发详解 | 无异说</title>
   
 
 
@@ -132,7 +132,7 @@
     <div>
       <a href="/" class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
-        <span class="site-title">wuyi</span>
+        <span class="site-title">无异说</span>
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
@@ -205,13 +205,13 @@
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/18/touchEvent/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="author">
-      <meta itemprop="description" content="description">
+      <meta itemprop="name" content="无异">
+      <meta itemprop="description" content="程序员进行时">
       <meta itemprop="image" content="/images/avatar.gif">
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="wuyi">
+      <meta itemprop="name" content="无异说">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">Android touch事件分发详解
@@ -270,8 +270,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>Android开发主要是在智能手机上，而智能手机基本都是触屏手机，用户的交互绝大部分都是通过触碰屏幕完成的，所以Android的View体系中touch事件的传递处理机制就是重中之重。列表跟着手指移动方向滑动、按钮响应点击，这些都是因为touch事件正确传递给了这些View，它们才能做出响应。</p>
-<p>我们知道所有界面都是基于View和ViewGroup的，结构上是一层一层组织的：</p>
+        <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><p>Android开发主要是在智能手机上，而智能手机基本都是触屏手机，用户的交互绝大部分都是通过触碰屏幕完成的，所以Android的View体系中touch事件的传递处理机制就是重中之重。列表跟着手指移动方向滑动、按钮响应点击，这些都是因为touch事件正确传递给了这些View，它们才能做出响应。</p><p>我们知道所有界面都是基于View和ViewGroup的，结构上是一层一层组织的：</p><a id="more"></a>
+
 <img src="/2019/08/18/touchEvent/viewHierarchy.png" title="viewHierarchy">
 
 <p>而且整个View tree的顶层就是ViewGroup，所以touch事件传递的重点就在于ViewGroup分发到子View的过程，事件流动的方向。</p>
@@ -479,8 +479,8 @@
 
       <div class="site-overview-wrap sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  <p class="site-author-name" itemprop="name">author</p>
-  <div class="site-description" itemprop="description">description</div>
+  <p class="site-author-name" itemprop="name">无异</p>
+  <div class="site-description" itemprop="description">程序员进行时</div>
 </div>
   <nav class="site-state motion-element">
       <div class="site-state-item site-state-posts">
@@ -530,7 +530,7 @@
   <span class="with-love" id="animate">
     <i class="fa fa-user"></i>
   </span>
-  <span class="author" itemprop="copyrightHolder">author</span>
+  <span class="author" itemprop="copyrightHolder">无异</span>
 </div>
   <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
   <span class="post-meta-divider">|</span>

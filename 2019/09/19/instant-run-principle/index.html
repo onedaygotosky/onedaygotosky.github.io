@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: 'Copy',
+      copy_success: 'Copied',
+      copy_failure: 'Copy failed'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="前言Instant-run是Android Studio 2.0开始引入的新特性，它的作用是使开发者在开发时的改动可以很快地被应用，节省开发者的时间。当改动了代码之后，不需要进行完整的构建过程生成新的apk并且重新安装，只是把涉及到改动的部分push到设备上，某些情况下甚至都不需要重启当前Activity，马上就可以看到改动。牛逼啊，简直黑科技。">
+<meta name="keywords" content="android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入理解Instant Run——原理篇">
+<meta property="og:url" content="http://yoursite.com/2019/09/19/instant-run-principle/index.html">
+<meta property="og:site_name" content="无异说">
+<meta property="og:description" content="前言Instant-run是Android Studio 2.0开始引入的新特性，它的作用是使开发者在开发时的改动可以很快地被应用，节省开发者的时间。当改动了代码之后，不需要进行完整的构建过程生成新的apk并且重新安装，只是把涉及到改动的部分push到设备上，某些情况下甚至都不需要重启当前Activity，马上就可以看到改动。牛逼啊，简直黑科技。">
+<meta property="og:locale" content="zh">
+<meta property="og:image" content="http://yoursite.com/2019/09/19/instant-run-principle/run.png">
+<meta property="og:image" content="http://yoursite.com/2019/09/19/instant-run-principle/build.png">
+<meta property="og:image" content="http://yoursite.com/2019/09/19/instant-run-principle/before-build.png">
+<meta property="og:image" content="http://yoursite.com/2019/09/19/instant-run-principle/after-build.png">
+<meta property="og:image" content="http://yoursite.com/2019/09/19/instant-run-principle/IR-post-build.png">
+<meta property="og:image" content="http://yoursite.com/2019/09/19/instant-run-principle/hack.png">
+<meta property="og:updated_time" content="2019-09-19T14:39:07.689Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深入理解Instant Run——原理篇">
+<meta name="twitter:description" content="前言Instant-run是Android Studio 2.0开始引入的新特性，它的作用是使开发者在开发时的改动可以很快地被应用，节省开发者的时间。当改动了代码之后，不需要进行完整的构建过程生成新的apk并且重新安装，只是把涉及到改动的部分push到设备上，某些情况下甚至都不需要重启当前Activity，马上就可以看到改动。牛逼啊，简直黑科技。">
+<meta name="twitter:image" content="http://yoursite.com/2019/09/19/instant-run-principle/run.png">
+  <link rel="canonical" href="http://yoursite.com/2019/09/19/instant-run-principle/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>深入理解Instant Run——原理篇 | 无异说</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">无异说</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">功不唐捐</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/19/instant-run-principle/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="无异">
+      <meta itemprop="description" content="程序员进行时">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="无异说">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">深入理解Instant Run——原理篇
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              
+                
+              
+
+              <time title="Created: 2019-09-19 22:33:05 / Modified: 22:39:07" itemprop="dateCreated datePublished" datetime="2019-09-19T22:33:05+08:00">2019-09-19</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/android/" itemprop="url" rel="index"><span itemprop="name">android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+        
+      
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2019/09/19/instant-run-principle/#comments" itemprop="discussionUrl"><span class="post-comments-count disqus-comment-count" data-disqus-identifier="2019/09/19/instant-run-principle/" itemprop="commentCount"></span></a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>Instant-run是Android Studio 2.0开始引入的新特性，它的作用是使开发者在开发时的改动可以很快地被应用，节省开发者的时间。当改动了代码之后，不需要进行完整的构建过程生成新的apk并且重新安装，只是把涉及到改动的部分push到设备上，某些情况下甚至都不需要重启当前Activity，马上就可以看到改动。牛逼啊，简直黑科技。</p><a id="more"></a>
+<p>hotfix(热更新)的使用场景类似instant-run，所以有些hotfix框架的实现也借鉴了instant-run的思想。</p>
+<h1 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h1><p>使用instant-run要求Android Studio版本不低于2.0、用于构建的Android gradle插件版本不低于2.0.0(就是build.gradle里的classpath ‘com.android.tools.build:gradle:x.x.x’)、minSdkVersion不低于21。</p>
+<p>对AS和gradle构建插件有版本要求是因为instant-run的实现需要介入并修改原来的构建过程，对sdk有要求是因为加载patch的要求。</p>
+<p>满足环境要求后，在第一次点AS的run按钮完整安装app后，旁边会有一个闪电状的按钮，后面接着在工程里开发，随时可以按这个按钮应用instant-run。</p>
+<img src="/2019/09/19/instant-run-principle/run.png" title="run">
+
+<p>instant-run加载更新有三种方式：hotswap、coldswap、warmswap</p>
+<h2 id="hotswap"><a href="#hotswap" class="headerlink" title="hotswap"></a>hotswap</h2><p>如果只是改动现有方法的实现逻辑，instant-run会自动应用hotswap，不需要重启就可以看到实际改动。</p>
+<p>比如现在有如下一个Activity：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">Activity</span> <span class="keyword">implements</span> <span class="title">View</span>.<span class="title">OnClickListener</span>  </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> TextView mTv;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line"></span><br><span class="line">        mTv = <span class="keyword">new</span> TextView(<span class="keyword">this</span>);</span><br><span class="line">        mTv.setText(<span class="string">"click me!"</span>);</span><br><span class="line">        mTv.setOnClickListener(<span class="keyword">this</span>);</span><br><span class="line">        setContentView(mTv);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">toBeFix</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Toast.makeText(<span class="keyword">this</span>, <span class="string">"origin count: "</span> + count, Toast.LENGTH_SHORT).show();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">        toBeFix();</span><br><span class="line">        count++;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>整个界面就是一个简单的Textview，点击了会弹出一个toast。现在把按钮点击两次，会依次弹出toast:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">origin count: 0</span><br><span class="line">origin count: 1</span><br></pre></td></tr></table></figure>
+
+<p>然后简单地把<code>toBeFix</code>中的文案改掉：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">toBeFix</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  Toast.makeText(<span class="keyword">this</span>, <span class="string">"change count: "</span> + count, Toast.LENGTH_SHORT).show();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>应用instant-run，Activity没有任何变化，但是再点击按钮，弹出来的toast变成了：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">change count: 2</span><br></pre></td></tr></table></figure>
+
+<p>文案确实发生变成了改变后的文案，而且count在之前的基础上递增，说明Activity确实还是之前的实例，没有重启数据也没有丢。这个行为就类似线上hotfix，在用户无感知的情况下替换掉实际的实现逻辑。</p>
+<p><strong><em>如果发现每次都重启了，参考<a href="https://stackoverflow.com/questions/42666008/android-studio-instant-run-restart-application-always" target="_blank" rel="noopener">这个回答</a>关掉每次自动重启的设置</em></strong></p>
+<h2 id="warmswap"><a href="#warmswap" class="headerlink" title="warmswap"></a>warmswap</h2><p>当改变的不止是代码，还涉及到资源文件的变动，就做不到像hotswap一样在不影响当前Activity的情况下应用变动了。AS会生成一个新的resources._ap(类似正常构建过程中资源的打包)推到设备上，然后重启当前Activity来使新的资源能生效。</p>
+<h2 id="coldswap"><a href="#coldswap" class="headerlink" title="coldswap"></a>coldswap</h2><p>如果不符合上面hotswap和warmswap的条件，比如说增加或者删减了方法、修改了类的集成关系、修改了AndroidManifest等，就会应用coldswap。</p>
+<p>coldswap也是会把改动部分推送到设备上，然后会重启整个app，才能看到变动。</p>
+<h1 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h1><blockquote>
+<p>以下分析基于Android Studio 3.2、Android gradle插件3.2.1</p>
+</blockquote>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>insatnu-run的目的是使在代码或者资源改动之后，不用进行完整的编译和重新安装也能在设备上看到改动，为了实现这个目标，它主要做了下面几件事：</p>
+<ul>
+<li>介入构建过程，把instant-run框架的jar包打进我们正在开发的应用的apk包里，目的是把instant-run的服务在app中跑起来</li>
+<li>打进apk中的instant-run.jar中有个contentProvider，它在我们的应用中被启动后会打开一个LocalServerSocket并监听，等待AS进行通讯</li>
+<li>AS通过adb工具跟我们app中上面提到的socket进行通讯，发送实现定义好的各种消息，app会做出相应的动作。相当于一个Server/Client架构，server跑在我们的app里，client跑在AS里</li>
+<li>gradle插件把本次改动的对应产物生成后，AS中的client负责把产物通过adb推送到设备上，server根据本次类型是hot、warm还是cold决定要不要hack当前应用的AssertManager以及重启Activity或者应用</li>
+<li>整个过程涉及Android的gradle插件、Android Studio中的instant-run client、打进我们app中的instant-run runtime之间的同步和数据互传</li>
+<li>整个过程需要Android Studio深层参与，所以不像正常的build可以用<code>./gradlew assembleDebug</code>这个命令行的方式来进行，instant-run只能通过AS来执行</li>
+</ul>
+<h2 id="整体流程"><a href="#整体流程" class="headerlink" title="整体流程"></a>整体流程</h2><p>上面讲到的所有事情，可以用下图概括：</p>
+<img src="/2019/09/19/instant-run-principle/build.png" title="build">
+
+<p>下面两个图描述了针对gradle插件构建过程的修改和注入：</p>
+<p>原始的构建过程如下：</p>
+<img src="/2019/09/19/instant-run-principle/before-build.png" title="before-build">
+
+
+
+<p>引入instant-run后的构建过程如下：</p>
+<img src="/2019/09/19/instant-run-principle/after-build.png" title="after-build">
+
+<p>从Android Studio的角度来看，它负责根据build的产物和build-info.xml等自动分析出要执行的动作，更详细的流程图如下：</p>
+<img src="/2019/09/19/instant-run-principle/IR-post-build.png" title="IR-post-build">
+
+<h2 id="patch生效原理"><a href="#patch生效原理" class="headerlink" title="patch生效原理"></a>patch生效原理</h2><p>读者：好好好知道了，说了那么多，就算你现在把改动后的代码或者资源推送到设备上了，然后呢？没说怎么生效啊。</p>
+<p>确实，改动push到设备后怎么生效，是整个架构的基础。总体来说，做了三件事情使改动生效：</p>
+<ul>
+<li>针对资源改动，也就是warm swap，hack掉当前的AssertManager</li>
+<li>针对简单的代码改动，也就是hot swap，因为在最开始的构建中就做了代码插桩的工作，只需要做一个简单的反射就可以</li>
+<li>针对cold swap，使用<code>adb install-multiple -p</code>进行部分安装</li>
+</ul>
+<h3 id="代码插桩和替换"><a href="#代码插桩和替换" class="headerlink" title="代码插桩和替换"></a>代码插桩和替换</h3><p>还是用上面那个最简单的MainActivity的代码做示例，先回去看下java源码，再看下正常编译后生成的class文件和instant-run下生成的class文件的对比，就能看到端倪了：</p>
+<p>正常编译的class:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.example.wuyi.instantruntest;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> android.app.Activity;</span><br><span class="line"><span class="keyword">import</span> android.os.Bundle;</span><br><span class="line"><span class="keyword">import</span> android.view.View;</span><br><span class="line"><span class="keyword">import</span> android.view.View.OnClickListener;</span><br><span class="line"><span class="keyword">import</span> android.widget.TextView;</span><br><span class="line"><span class="keyword">import</span> android.widget.Toast;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">Activity</span> <span class="keyword">implements</span> <span class="title">OnClickListener</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> TextView mTv;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MainActivity</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">        <span class="keyword">this</span>.mTv = <span class="keyword">new</span> TextView(<span class="keyword">this</span>);</span><br><span class="line">        <span class="keyword">this</span>.mTv.setText(<span class="string">"click me!"</span>);</span><br><span class="line">        <span class="keyword">this</span>.mTv.setOnClickListener(<span class="keyword">this</span>);</span><br><span class="line">        <span class="keyword">this</span>.setContentView(<span class="keyword">this</span>.mTv);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">toBeFix</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Toast.makeText(<span class="keyword">this</span>, <span class="string">"origin count: "</span> + <span class="keyword">this</span>.count, <span class="number">0</span>).show();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.toBeFix();</span><br><span class="line">        ++<span class="keyword">this</span>.count;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>instant-run编译的class:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.example.wuyi.instantruntest;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> android.app.Activity;</span><br><span class="line"><span class="keyword">import</span> android.os.Bundle;</span><br><span class="line"><span class="keyword">import</span> android.view.View;</span><br><span class="line"><span class="keyword">import</span> android.view.View.OnClickListener;</span><br><span class="line"><span class="keyword">import</span> android.widget.TextView;</span><br><span class="line"><span class="keyword">import</span> android.widget.Toast;</span><br><span class="line"><span class="keyword">import</span> com.android.tools.ir.runtime.IncrementalChange;</span><br><span class="line"><span class="keyword">import</span> com.android.tools.ir.runtime.InstantReloadException;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">Activity</span> <span class="keyword">implements</span> <span class="title">OnClickListener</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> TextView mTv;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> count;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = -<span class="number">3671979505056694483L</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">volatile</span> <span class="keyword">transient</span> com.android.tools.ir.runtime.IncrementalChange $change;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MainActivity</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        IncrementalChange var1 = $change;</span><br><span class="line">        <span class="keyword">if</span> (var1 != <span class="keyword">null</span>) &#123;</span><br><span class="line">            Object[] var10001 = (Object[])var1.access$dispatch(<span class="string">"init$args.([Lcom/example/wuyi/instantruntest/MainActivity;[Ljava/lang/Object;)Ljava/lang/Object;"</span>, <span class="keyword">new</span> Object[]&#123;<span class="keyword">null</span>, <span class="keyword">new</span> Object[<span class="number">0</span>]&#125;);</span><br><span class="line">            Object[] var2 = (Object[])var10001[<span class="number">0</span>];</span><br><span class="line">            <span class="keyword">this</span>(var10001, (InstantReloadException)<span class="keyword">null</span>);</span><br><span class="line">            var2[<span class="number">0</span>] = <span class="keyword">this</span>;</span><br><span class="line">            var1.access$dispatch(<span class="string">"init$body.(Lcom/example/wuyi/instantruntest/MainActivity;[Ljava/lang/Object;)V"</span>, var2);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">super</span>();</span><br><span class="line">            <span class="keyword">this</span>.count = <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        IncrementalChange var2 = $change;</span><br><span class="line">        <span class="keyword">if</span> (var2 != <span class="keyword">null</span>) &#123;</span><br><span class="line">            var2.access$dispatch(<span class="string">"onCreate.(Landroid/os/Bundle;)V"</span>, <span class="keyword">new</span> Object[]&#123;<span class="keyword">this</span>, savedInstanceState&#125;);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">            <span class="keyword">this</span>.mTv = <span class="keyword">new</span> TextView(<span class="keyword">this</span>);</span><br><span class="line">            <span class="keyword">this</span>.mTv.setText(<span class="string">"click me!"</span>);</span><br><span class="line">            <span class="keyword">this</span>.mTv.setOnClickListener(<span class="keyword">this</span>);</span><br><span class="line">            <span class="keyword">this</span>.setContentView(<span class="keyword">this</span>.mTv);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">toBeFix</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        IncrementalChange var1 = $change;</span><br><span class="line">        <span class="keyword">if</span> (var1 != <span class="keyword">null</span>) &#123;</span><br><span class="line">            var1.access$dispatch(<span class="string">"toBeFix.()V"</span>, <span class="keyword">new</span> Object[]&#123;<span class="keyword">this</span>&#125;);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            Toast.makeText(<span class="keyword">this</span>, <span class="string">"origin count: "</span> + <span class="keyword">this</span>.count, <span class="number">0</span>).show();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">        IncrementalChange var2 = $change;</span><br><span class="line">        <span class="keyword">if</span> (var2 != <span class="keyword">null</span>) &#123;</span><br><span class="line">            var2.access$dispatch(<span class="string">"onClick.(Landroid/view/View;)V"</span>, <span class="keyword">new</span> Object[]&#123;<span class="keyword">this</span>, v&#125;);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">this</span>.toBeFix();</span><br><span class="line">            ++<span class="keyword">this</span>.count;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    MainActivity(Object[] var1, InstantReloadException var2) &#123;</span><br><span class="line">        String var3 = (String)var1[<span class="number">1</span>];</span><br><span class="line">        <span class="keyword">switch</span>(var3.hashCode()) &#123;</span><br><span class="line">        <span class="keyword">case</span> -<span class="number">1230767868</span>:</span><br><span class="line">            <span class="keyword">super</span>();</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        <span class="keyword">case</span> -<span class="number">669279916</span>:</span><br><span class="line">            <span class="keyword">this</span>();</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> InstantReloadException(String.format(<span class="string">"String switch could not find '%s' with hashcode %s in %s"</span>, var3, var3.hashCode(), <span class="string">"com/example/wuyi/instantruntest/MainActivity"</span>));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到经过instant-run的注入，class文件里多了好多内容。再仔细对比下，就会发现关键在新增的<code>public static volatile transient com.android.tools.ir.runtime.IncrementalChange $change;</code>这个属性。<code>$change</code>初始值为null，这时其实两个class文件的行为是一样的。当<code>$change</code>不为null时，MainActivity的所有方法都被代理到了<code>$change</code>的<code>access$dispatch</code>方法上。这个时候，如果<code>$change</code>中的实现逻辑是开发中的代码改动，那么实际上MainActivity中的所有方法的实际调用都被代理到改动后的逻辑了，实现了使改动生效的目的。</p>
+<p><code>$change</code>是<code>IncrementalChange</code>接口类型，里面只定义了一个<code>access$dispatch</code>方法。那实际上被赋值给MainActivity的$change的实现是怎么样的？看到实际的实现就知道有没有应用新的改动了。还是按照上面的描述，把MainActivity的toBeFix方法里的文案中的origin改成change，来一次实际的instant-run hotswap。</p>
+<p>然后可以在<strong>app/intermediates/transforms/transforms/instantRun</strong>下找到实际的实现。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.example.wuyi.instantruntest;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> android.os.Bundle;</span><br><span class="line"><span class="keyword">import</span> android.view.View;</span><br><span class="line"><span class="keyword">import</span> android.widget.TextView;</span><br><span class="line"><span class="keyword">import</span> android.widget.Toast;</span><br><span class="line"><span class="keyword">import</span> com.android.tools.ir.runtime.AndroidInstantRuntime;</span><br><span class="line"><span class="keyword">import</span> com.android.tools.ir.runtime.IncrementalChange;</span><br><span class="line"><span class="keyword">import</span> com.android.tools.ir.runtime.InstantReloadException;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span>$<span class="title">override</span> <span class="keyword">implements</span> <span class="title">IncrementalChange</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> MainActivity$override() &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Object init$args(MainActivity[] var0, Object[] var1) &#123;</span><br><span class="line">        Object[] var2 = <span class="keyword">new</span> Object[]&#123;<span class="keyword">new</span> Object[]&#123;var0, <span class="keyword">new</span> Object[<span class="number">0</span>]&#125;, <span class="string">"android/app/Activity.()V"</span>&#125;;</span><br><span class="line">        <span class="keyword">return</span> var2;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> init$body(MainActivity $<span class="keyword">this</span>, Object[] var1) &#123;</span><br><span class="line">        AndroidInstantRuntime.setPrivateField($<span class="keyword">this</span>, <span class="keyword">new</span> Integer(<span class="number">0</span>), MainActivity.class, <span class="string">"count"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(MainActivity $<span class="keyword">this</span>, Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        Object[] var2 = <span class="keyword">new</span> Object[]&#123;savedInstanceState&#125;;</span><br><span class="line">        MainActivity.access$<span class="keyword">super</span>($<span class="keyword">this</span>, <span class="string">"onCreate.(Landroid/os/Bundle;)V"</span>, var2);</span><br><span class="line">        AndroidInstantRuntime.setPrivateField($<span class="keyword">this</span>, <span class="keyword">new</span> TextView($<span class="keyword">this</span>), MainActivity.class, <span class="string">"mTv"</span>);</span><br><span class="line">        ((TextView)AndroidInstantRuntime.getPrivateField($<span class="keyword">this</span>, MainActivity.class, <span class="string">"mTv"</span>)).setText(<span class="string">"click me!"</span>);</span><br><span class="line">        ((TextView)AndroidInstantRuntime.getPrivateField($<span class="keyword">this</span>, MainActivity.class, <span class="string">"mTv"</span>)).setOnClickListener($<span class="keyword">this</span>);</span><br><span class="line">        $<span class="keyword">this</span>.setContentView((TextView)AndroidInstantRuntime.getPrivateField($<span class="keyword">this</span>, MainActivity.class, <span class="string">"mTv"</span>));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">toBeFix</span><span class="params">(MainActivity $<span class="keyword">this</span>)</span> </span>&#123;</span><br><span class="line">        Toast.makeText($<span class="keyword">this</span>, <span class="string">"change count: "</span> + ((Number)AndroidInstantRuntime.getPrivateField($<span class="keyword">this</span>, MainActivity.class, <span class="string">"count"</span>)).intValue(), <span class="number">0</span>).show();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(MainActivity $<span class="keyword">this</span>, View v)</span> </span>&#123;</span><br><span class="line">        toBeFix($<span class="keyword">this</span>);</span><br><span class="line">        AndroidInstantRuntime.setPrivateField($<span class="keyword">this</span>, <span class="keyword">new</span> Integer(((Number)AndroidInstantRuntime.getPrivateField($<span class="keyword">this</span>, MainActivity.class, <span class="string">"count"</span>)).intValue() + <span class="number">1</span>), MainActivity.class, <span class="string">"count"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> Object access$dispatch(String var1, Object... var2) &#123;</span><br><span class="line">        <span class="keyword">switch</span>(var1.hashCode()) &#123;</span><br><span class="line">        <span class="keyword">case</span> -<span class="number">1912803358</span>:</span><br><span class="line">            onClick((MainActivity)var2[<span class="number">0</span>], (View)var2[<span class="number">1</span>]);</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">case</span> -<span class="number">1441621120</span>:</span><br><span class="line">            <span class="keyword">return</span> init$args((MainActivity[])var2[<span class="number">0</span>], (Object[])var2[<span class="number">1</span>]);</span><br><span class="line">        <span class="keyword">case</span> -<span class="number">909773794</span>:</span><br><span class="line">            toBeFix((MainActivity)var2[<span class="number">0</span>]);</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">case</span> -<span class="number">641568046</span>:</span><br><span class="line">            onCreate((MainActivity)var2[<span class="number">0</span>], (Bundle)var2[<span class="number">1</span>]);</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">942020946</span>:</span><br><span class="line">            init$body((MainActivity)var2[<span class="number">0</span>], (Object[])var2[<span class="number">1</span>]);</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> InstantReloadException(String.format(<span class="string">"String switch could not find '%s' with hashcode %s in %s"</span>, var1, var1.hashCode(), <span class="string">"com/example/wuyi/instantruntest/MainActivity"</span>));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>hotswap做的事情就是通过注入到app中的runtime用反射把MainActivity的 <code>$change</code>赋值了成<code>MainActivity$override</code>的一个实例。然后MainActivity的所有方法代理到<code>access$dispatch</code>方法后再根据方法签名分发给MainActivity$override中的对应方法。</p>
+<p>有点绕。说白了<code>MainActivity$override</code>基本上就是MainActivity的副本，唯一改动的地方就是toBeFix方法中的文案。做的事情总共是三步完成狸猫换太子：</p>
+<ul>
+<li>在第一次完整编译的时候给所有的类插桩（字节码操作），使它们的方法能被代理</li>
+<li>代码改动后的增量编译中，通过gradle插件生成包含了改动代码的代理类</li>
+<li>通过app中的instant-run服务给代码被改动的类的<code>$change</code>字段复制，这样所有方法都转发到了代理类，而代理类里就是改动后的逻辑</li>
+<li>done！</li>
+</ul>
+<img src="/2019/09/19/instant-run-principle/hack.png" title="hack">
+
+<p>实际推送到设备的patch为<strong>app/intermediates/reload-dex/classes.dex</strong>，里面只有两个类，一个类是<code>MainActivity$override</code>，另一个类实现了instant-run中的<code>AbstractPatchesLoaderImpl</code>，作用是指明哪个类需要被patch，在这里就是MainActivity。</p>
+<h3 id="替换AssertManager"><a href="#替换AssertManager" class="headerlink" title="替换AssertManager"></a>替换AssertManager</h3><p>在warmswap时，构建一个新的AssertManager，通过反射调用它的<code>addAssetPath</code>方法把新push到设备上的改动资源的路径加进去，然后还是通过反射把当前所有使用中的AssertManager替换成这个新的，再重启就能找到修改后的资源。</p>
+<p>具体实现查看insatnt-run.jar中的MonkeyPatcher#monkeyPatchExistingResources()</p>
+<p>实际推送到设备的patch为<strong>app/intermediates/instant-run-resources/resources-debug.ir.ap_</strong></p>
+<h3 id="部分安装"><a href="#部分安装" class="headerlink" title="部分安装"></a>部分安装</h3><p>这个就不多说了，就是adb提供的功能，不需要安装完整的apk，只会重新安装更新的部分</p>
+<p><strong>参考</strong></p>
+<ul>
+<li><a href="https://android.googlesource.com/platform/tools/base/+/refs/tags/studio-3.4.0/build-system/instant-run-instrumentation/README.md" target="_blank" rel="noopener">https://android.googlesource.com/platform/tools/base/+/refs/tags/studio-3.4.0/build-system/instant-run-instrumentation/README.md</a></li>
+<li><a href="https://android.googlesource.com/platform/tools/base/+/refs/tags/studio-3.4.0/instant-run/README.md" target="_blank" rel="noopener">https://android.googlesource.com/platform/tools/base/+/refs/tags/studio-3.4.0/instant-run/README.md</a></li>
+<li><a href="https://medium.com/google-developers/instant-run-how-does-it-work-294a1633367f" target="_blank" rel="noopener">https://medium.com/google-developers/instant-run-how-does-it-work-294a1633367f</a></li>
+<li><a href="https://android.googlesource.com/platform/tools/adt/idea/+/refs/tags/studio-3.2.1/android/src/com/android/tools/idea/run/README.md" target="_blank" rel="noopener">https://android.googlesource.com/platform/tools/adt/idea/+/refs/tags/studio-3.2.1/android/src/com/android/tools/idea/run/README.md</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/android/" rel="tag"># android</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/08/18/touchEvent/" rel="next" title="Android touch事件分发详解">
+                  <i class="fa fa-chevron-left"></i> Android touch事件分发详解
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#使用"><span class="nav-number">2.</span> <span class="nav-text">使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#hotswap"><span class="nav-number">2.1.</span> <span class="nav-text">hotswap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#warmswap"><span class="nav-number">2.2.</span> <span class="nav-text">warmswap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#coldswap"><span class="nav-number">2.3.</span> <span class="nav-text">coldswap</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#原理"><span class="nav-number">3.</span> <span class="nav-text">原理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">3.1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#整体流程"><span class="nav-number">3.2.</span> <span class="nav-text">整体流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#patch生效原理"><span class="nav-number">3.3.</span> <span class="nav-text">patch生效原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#代码插桩和替换"><span class="nav-number">3.3.1.</span> <span class="nav-text">代码插桩和替换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#替换AssertManager"><span class="nav-number">3.3.2.</span> <span class="nav-text">替换AssertManager</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#部分安装"><span class="nav-number">3.3.3.</span> <span class="nav-text">部分安装</span></a></li></ol></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">无异</p>
+  <div class="site-description" itemprop="description">程序员进行时</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">categories</span>
+        
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">tags</span>
+        
+      </div>
+    
+  </nav>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">无异</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://wuyi-blog.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  function disqus_config() {
+    this.page.url = "http://yoursite.com/2019/09/19/instant-run-principle/";
+    this.page.identifier = "2019/09/19/instant-run-principle/";
+    this.page.title = '深入理解Instant Run——原理篇';};
+  function loadComments() {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://wuyi-blog.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  }
+    window.addEventListener('load', loadComments, false);
+  
+</script>
+
+</body>
+</html>

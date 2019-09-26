@@ -58,7 +58,7 @@
   <meta name="description" content="前言前面的文章分析了Instant Run的原理，大概说下前情提要：Instant Run的作用是使得开发过程中的改动可以不用完整编译并重新安装app就能应用，也就是更快看到改动的实际效果，节省时间。实现的原理是通过修改原先的构建过程在初始编译中实现插桩，在后面的改动中只编译改动的部分，并把产物推送到设备上，并通过植入app中的runtime加载新的变动。">
 <meta name="keywords" content="android">
 <meta property="og:type" content="article">
-<meta property="og:title" content="instant-run-source">
+<meta property="og:title" content="深入理解Instant Run——源码篇">
 <meta property="og:url" content="http://yoursite.com/2019/09/26/instant-run-source/index.html">
 <meta property="og:site_name" content="无异说">
 <meta property="og:description" content="前言前面的文章分析了Instant Run的原理，大概说下前情提要：Instant Run的作用是使得开发过程中的改动可以不用完整编译并重新安装app就能应用，也就是更快看到改动的实际效果，节省时间。实现的原理是通过修改原先的构建过程在初始编译中实现插桩，在后面的改动中只编译改动的部分，并把产物推送到设备上，并通过植入app中的runtime加载新的变动。">
@@ -66,9 +66,9 @@
 <meta property="og:image" content="http://yoursite.com/2019/09/26/instant-run-source/ide.png">
 <meta property="og:image" content="http://yoursite.com/2019/09/26/instant-run-source/ide2.png">
 <meta property="og:image" content="http://yoursite.com/2019/09/26/instant-run-source/protocal.png">
-<meta property="og:updated_time" content="2019-09-26T14:57:31.258Z">
+<meta property="og:updated_time" content="2019-09-26T15:00:10.940Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="instant-run-source">
+<meta name="twitter:title" content="深入理解Instant Run——源码篇">
 <meta name="twitter:description" content="前言前面的文章分析了Instant Run的原理，大概说下前情提要：Instant Run的作用是使得开发过程中的改动可以不用完整编译并重新安装app就能应用，也就是更快看到改动的实际效果，节省时间。实现的原理是通过修改原先的构建过程在初始编译中实现插桩，在后面的改动中只编译改动的部分，并把产物推送到设备上，并通过植入app中的runtime加载新的变动。">
 <meta name="twitter:image" content="http://yoursite.com/2019/09/26/instant-run-source/ide.png">
   <link rel="canonical" href="http://yoursite.com/2019/09/26/instant-run-source/">
@@ -85,7 +85,7 @@
   };
 </script>
 
-  <title>instant-run-source | 无异说</title>
+  <title>深入理解Instant Run——源码篇 | 无异说</title>
   
 
 
@@ -214,7 +214,7 @@
       <meta itemprop="name" content="无异说">
     </span>
       <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">instant-run-source
+        <h1 class="post-title" itemprop="name headline">深入理解Instant Run——源码篇
 
           
         </h1>
@@ -230,7 +230,7 @@
                 
               
 
-              <time title="Created: 2019-09-26 22:46:24 / Modified: 22:57:31" itemprop="dateCreated datePublished" datetime="2019-09-26T22:46:24+08:00">2019-09-26</time>
+              <time title="Created: 2019-09-26 22:46:24 / Modified: 23:00:10" itemprop="dateCreated datePublished" datetime="2019-09-26T22:46:24+08:00">2019-09-26</time>
             </span>
           
             
@@ -612,7 +612,7 @@
   function disqus_config() {
     this.page.url = "http://yoursite.com/2019/09/26/instant-run-source/";
     this.page.identifier = "2019/09/26/instant-run-source/";
-    this.page.title = 'instant-run-source';};
+    this.page.title = '深入理解Instant Run——源码篇';};
   function loadComments() {
     if (window.DISQUS) {
       DISQUS.reset({

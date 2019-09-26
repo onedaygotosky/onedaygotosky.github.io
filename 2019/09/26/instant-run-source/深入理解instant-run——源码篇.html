@@ -1,0 +1,483 @@
+<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>前面的<a href="">文章</a>分析了Instant Run的原理，大概说下前情提要：</p>
+<p>Instant Run的作用是使得开发过程中的改动可以不用完整编译并重新安装app就能应用，也就是更快看到改动的实际效果，节省时间。实现的原理是通过修改原先的构建过程在初始编译中实现插桩，在后面的改动中只编译改动的部分，并把产物推送到设备上，并通过植入app中的runtime加载新的变动。</p>
+<p>原理篇只讲了原理，没有涉及Instant Run框架的实际代码。既然Android的所有代码都是通过AOSP开源的，话不多说，</p>
+<blockquote>
+<p>Read The Fucxxxx Source Code           ——Linus</p>
+</blockquote>
+<h1 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h1><h2 id="获取源码"><a href="#获取源码" class="headerlink" title="获取源码"></a>获取源码</h2><p><a href="https://android.googlesource.com/">AOSP</a>的源码是一个极其庞大的工程。正因为它的庞大，google使用基于git开发的版本管理工具<a href="https://gerrit.googlesource.com/git-repo/+/refs/heads/master/README.md">repo</a>进行管理。如果把全部开源的源码下下来，得好几十G。实际上我们要看Instant Run相关的代码，只需要下几个相关的git仓库就行，不需要使用repo下完所有源码。</p>
+<h3 id="clone"><a href="#clone" class="headerlink" title="clone"></a>clone</h3><p>前面提到过，Instant Run的设计需要Android构建工具和Android Studio的配合，所以相关的源码在两个库中。</p>
+<ul>
+<li><a href="https://android.googlesource.com/platform/tools/base">https://android.googlesource.com/platform/tools/base</a> 这个库中有Android gradle插件的代码，instant-run框架的代码全部在其中的<code>instant-run</code>目录中<ul>
+<li>需要注意的是，因为最新的Android Studio中google使用的新的<code>apply change</code>架构替代了instant-run，所以最新的代码中看不到instant-run。切到<a href="https://android.googlesource.com/platform/tools/base/+/refs/tags/studio-3.2.1">studio-3.2.1这个tag</a>就能看到了</li>
+</ul>
+</li>
+<li><a href="https://android.googlesource.com/platform/tools/adt/idea">https://android.googlesource.com/platform/tools/adt/idea</a> 这个库中有Android Studio相关的源代码，其中可以看到AS是如何配合instant-run工作的<ul>
+<li>同上，切换到跟上面一样的<a href="https://android.googlesource.com/platform/tools/adt/idea/+/refs/tags/studio-3.2.1">tag</a></li>
+</ul>
+</li>
+</ul>
+<h3 id="报错解决"><a href="#报错解决" class="headerlink" title="报错解决"></a>报错解决</h3><p>在git clone的时候，可能会碰到<code>Timed out</code>错误，这时候需要设置代理：</p>
+<pre><code class="shell">git config --global http.proxy http://127.0.0.1:1080     # 或者其他你实际使用的代理，比如socks5://127.0.0.1:1086
+git config --global https.proxy https://127.0.0.1:1080   # 或者其他你实际使用的代理，比如socks5://127.0.0.1:1086</code></pre>
+<p>下载完了记得把代理去掉，以免影响后续git的使用</p>
+<pre><code class="shell">git config --global --unset http.proxy
+git config --global --unset https.proxy</code></pre>
+<h2 id="项目导入"><a href="#项目导入" class="headerlink" title="项目导入"></a>项目导入</h2><h3 id="tools-base"><a href="#tools-base" class="headerlink" title="tools/base"></a>tools/base</h3><p>前面clone下来的tools/base切换到studio-3.2.1这个tag</p>
+<h4 id="instant-run"><a href="#instant-run" class="headerlink" title="instant-run"></a>instant-run</h4><p>选择使用Android Studio阅读instant-run框架的源码。</p>
+<p>进到<code>instant-run</code>目录下，此时内容如下：</p>
+<pre><code class="powershell">.
+├── BUILD
+├── README.md
+├── instant-run-annotations
+│   ├── BUILD
+│   ├── android.sdktools.instant-run-annotations.iml
+│   ├── build.gradle
+│   └── src
+├── instant-run-client
+│   ├── android.sdktools.instant-run-client.iml
+│   ├── build.gradle
+│   └── src
+├── instant-run-common
+│   ├── android.sdktools.instant-run-common.iml
+│   ├── build.gradle
+│   └── src
+├── instant-run-runtime
+│   ├── BUILD
+│   ├── build.gradle
+│   ├── instant-run-runtime.iml
+│   └── src
+├── instant-run-server
+│   ├── AndroidManifest.xml
+│   ├── BUILD
+│   ├── build.gradle
+│   ├── instant-run-server.iml
+│   ├── project.properties
+│   └── src
+└── instant-run.iml</code></pre>
+<p>可以看到，instant-run框架的设计清晰地分成了<code>annotations</code>、<code>client</code>、<code>common</code>、<code>runtime</code>、<code>server</code>这几个模块。实际这是一个C/S架构，具体后面分析。这几个模块下都有build.gradle，分别可以看做是一个gradle管理的项目。为了方便阅读，我们在AS中打开时希望这几个模块在同一个gradle项目中。</p>
+<ul>
+<li>首先用AS打开这个目录。然后使用任意版本的gradle在这个目录下运行<code>wrapper</code>任务。（这需要电脑上装有gradle，对于Android开发来说，gradle是必备的）</li>
+<li>这时候就会发现生成了熟悉的gradle目录、gradlew、gradlew.bat等文件，跟创建一个普通的Android项目中会有的文件一样</li>
+<li>手动创建一个<code>setting.gradle</code>，里面加上<code>include &#39;:instant-run-annotations&#39;, &#39;:instant-run-client&#39;, &#39;:instant-run-common&#39;, &#39;:instant-run-runtime&#39;, &#39;:instant-run-server&#39;</code></li>
+<li>按照类似<code>compile project(&#39;:base:instant-run:instant-run-runtime&#39;)</code>改成<code>compile project(&#39;:instant-run-runtime&#39;)</code>的改法改掉各个build.gradle中的依赖，<code>provide files(androidJar)</code>改成<code>compile files(androidJar)</code>，去掉各种<code>testCompile</code>的依赖，去掉<code>apply plugin: &#39;jacoco-tools-base&#39;</code></li>
+<li>手动在合适的地方拷贝NonNull、Nullable注解的源码，再sync一发，项目都被引进来了，绝大部分报错没了，不同模块间的代码引用也可以直接跳转了，可以愉快地看代码了</li>
+</ul>
+<p><img src="ide.png" alt="ide"></p>
+<h4 id="build-system-instant-run-instrumentation"><a href="#build-system-instant-run-instrumentation" class="headerlink" title="build-system/instant-run-instrumentation"></a>build-system/instant-run-instrumentation</h4><p>同样可以通过修改build.gradle来使用AS阅读，这里就不赘述了。</p>
+<p><img src="ide2.png" alt="ide2"></p>
+<p>build-system中就是Android gradle插件的全部代码。</p>
+<h3 id="adt-idea"><a href="#adt-idea" class="headerlink" title="adt/idea"></a>adt/idea</h3><p>adt/idea源码项目中的代码过多，也不需要细读，直接使用sublime text打开，善用搜索就行。</p>
+<h1 id="阅读源码"><a href="#阅读源码" class="headerlink" title="阅读源码"></a>阅读源码</h1><blockquote>
+<p>参照<a href="">原理篇</a>交叉阅读效果更佳。仅分析hotswap相关代码。</p>
+</blockquote>
+<h2 id="inject构建过程"><a href="#inject构建过程" class="headerlink" title="inject构建过程"></a>inject构建过程</h2><p>原理篇分析过了，instant run需要接入构建过程，把框架中的server和runtime部分打到app中。下面看下AS是怎么通知gradle插件做这个事情的。</p>
+<p>在项目的build.gradle中加上</p>
+<pre><code class="java"><span class="function">println <span class="title">getGradle</span><span class="params">()</span>.<span class="title">getStartParameter</span><span class="params">()</span></span></code></pre>
+<p>正常run应用，在AS底部的build的tab就会看到输出：</p>
+<pre><code class="shell">StartParameter{taskRequests=[DefaultTaskExecutionRequest{args=[:app:assembleDebug],projectPath=&#39;null&#39;}], excludedTaskNames=[], currentDir=/Users/wuyi/Android/code/demo/Instantruntest, searchUpwards=true, projectProperties={android.optional.compilation=INSTANT_DEV,FULL_APK, android.injected.build.density=xxhdpi, android.injected.coldswap.mode=MULTIAPK, android.injected.build.api=22, android.injected.invoked.from.ide=true, android.injected.build.abi=arm64-v8a,armeabi-v7a,armeabi, android.injected.restrict.variant.name=debug, android.injected.restrict.variant.project=:app}, systemPropertiesArgs={}, gradleUserHomeDir=/Users/wuyi/.gradle, gradleHome=/Users/wuyi/.gradle/wrapper/dists/gradle-4.6-all/bcst21l2brirad8k2ben1letg/gradle-4.6, logLevel=LIFECYCLE, showStacktrace=INTERNAL_EXCEPTIONS, buildFile=null, initScripts=[], dryRun=false, rerunTasks=false, recompileScripts=false, offline=false, refreshDependencies=false, parallelProjectExecution=true, configureOnDemand=false, maxWorkerCount=4, buildCacheEnabled=false, interactive=false}</code></pre>
+<p>这就是AS启动gradle的命令和全部参数。注意<code>projectProperties={android.optional.compilation=INSTANT_DEV,FULL_APK,</code>这句，这里就表示开启instant-run的支持。到了android gradle插件的执行逻辑里，会被转成如下枚举定义，分别表示不同的编译类型：</p>
+<pre><code class="java"><span class="keyword">package</span> com.android.builder.model;
+
+<span class="comment">/**</span>
+<span class="comment"> * enum describing possible optional compilation steps. This can be used to turn on java byte code</span>
+<span class="comment"> * manipulation in order to support instant reloading, or profiling, or anything related to</span>
+<span class="comment"> * transforming java compiler .class files before they are processed into .dex files.</span>
+<span class="comment"> */</span>
+<span class="keyword">public</span> <span class="keyword">enum</span> OptionalCompilationStep {
+
+    <span class="comment">/**</span>
+<span class="comment">     * presence will turn on the InstantRun feature.</span>
+<span class="comment">     */</span>
+    INSTANT_DEV,
+    <span class="comment">/**</span>
+<span class="comment">     * Force rebuild of cold swap artifacts.</span>
+<span class="comment">     *</span>
+<span class="comment">     * &lt;p&gt;Dex files and/or resources.ap_ for ColdswapMode.MULTIDEX and some split APKs for</span>
+<span class="comment">     * ColdswapMode.MULTIAPK.</span>
+<span class="comment">     */</span>
+    RESTART_ONLY,
+    <span class="comment">/**</span>
+<span class="comment">     * Force rebuild of fresh install artifacts.</span>
+<span class="comment">     *</span>
+<span class="comment">     * &lt;p&gt;A full apk for ColdswapMode.MULTIDEX and all the split apks for ColdswapMode.MULTIAPK.</span>
+<span class="comment">     */</span>
+    FULL_APK,
+}</code></pre>
+<p>如果没有这些参数，就不会干涉正常的build的过程。</p>
+<p>然后，我们知道，为了支持后续加载热更新，instant-run框架的部分代码会被打到我们的apk包里。这个事情是AS“偷偷”地做的。Android的gradle插件发布的时候包含了instant-run的jar包，build的时候再从里面解压出来放到特定位置然后打到我们app里。可以在<code>app/build/intermediates/incremental-runtime-classess/</code>下找到instant-run-jar。</p>
+<p>![image-20190918173101389](/Users/wuyi/Library/Application Support/typora-user-images/image-20190918173101389.png)</p>
+<p><code>com.android.build.gradle.tasks.ir.FastDeployRuntimeExtractorTask</code>类负责从gradle插件的jar包中把instant-run-server.jar提取出来放到build目录下：</p>
+<pre><code class="java">/ we could just extract the instant-runtime jar and place it as a stream once we
+    <span class="comment">// don't have to deal with AppInfo replacement.</span>
+    <span class="meta">@TaskAction</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">extract</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>{
+        URL fdrJar =
+                FastDeployRuntimeExtractorTask.class.getResource(
+                        <span class="string">"/instant-run/instant-run-server.jar"</span>);
+        <span class="keyword">if</span> (fdrJar == <span class="keyword">null</span>) {
+            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Couldn't find Instant-Run runtime library"</span>);
+        }
+        ...</code></pre>
+<p>找到我们本地gradle的缓存中Android插件的jar包(通常在/Users/wuyi/.gradle/caches/modules-2/files-2.1/com.android.tools.build/gradle/x.y.z/md5/gradle-x.y.z.jar)解压下就能验证里面确实有instant-run-server.jar</p>
+<p>build结束后，生成的apk包的位置跟普通build过程的位置不一样，这个区别可以在<code>com.android.build.gradle.internal.scope.VariantScopeImpl</code>中看到，这里指定了build结束后AS自动安装apk包的位置：</p>
+<pre><code class="java"><span class="comment">/**</span>
+<span class="comment"> * Obtains the location where APKs should be placed.</span>
+<span class="comment"> *</span>
+<span class="comment"> * <span class="doctag">@return</span> the location for APKs</span>
+<span class="comment"> */</span>
+<span class="meta">@NonNull</span>
+<span class="meta">@Override</span>
+<span class="function"><span class="keyword">public</span> File <span class="title">getApkLocation</span><span class="params">()</span> </span>{
+    String override = globalScope.getProjectOptions().get(StringOption.IDE_APK_LOCATION);
+    File defaultLocation =
+            getInstantRunBuildContext().isInInstantRunMode()
+                    ? getDefaultInstantRunApkLocation()
+                    : getDefaultApkLocation();
+
+    File baseDirectory =
+            override != <span class="keyword">null</span> &amp;&amp; !variantData.getType().isHybrid()
+                    ? globalScope.getProject().file(override)
+                    : defaultLocation;
+
+    <span class="keyword">return</span> <span class="keyword">new</span> File(baseDirectory, getVariantConfiguration().getDirName());
+}</code></pre>
+<p>每次build的产物和类型会被记录下来，以便AS和gradle插件判断要执行的动作。实际存储为<code>build.info.xml</code>文件，可以在intermediates/build-info目录下找到。</p>
+<p>在AS端，com.android.tools.idea.fd.gradle.InstantRunGradleUtils#getBuildInfo方法负责读取这个信息，实际会调用到instant-run包里的InstantRunBuildInfo自身的解析方法。</p>
+<pre><code class="java"><span class="meta">@Nullable</span>
+  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> InstantRunBuildInfo <span class="title">getBuildInfo</span><span class="params">(@NonNull AndroidModuleModel model)</span> </span>{
+    File buildInfo = getLocalBuildInfoFile(model);
+    <span class="keyword">if</span> (!buildInfo.exists()) {
+      <span class="keyword">return</span> <span class="keyword">null</span>;
+    }
+
+    String xml;
+    <span class="keyword">try</span> {
+      xml = Files.toString(buildInfo, Charsets.UTF_8);
+    }
+    <span class="keyword">catch</span> (IOException e) {
+      <span class="keyword">return</span> <span class="keyword">null</span>;
+    }
+
+    <span class="keyword">return</span> InstantRunBuildInfo.get(xml);
+  }</code></pre>
+<p>加载patch时需要有一个<code>AppPathLoaderImpl</code>类实现<code>AbstractPatchesLoaderImpl</code>的<code>getPatchedClasses</code>方法，指定实际被修复的类，生成逻辑如下：</p>
+<pre><code class="java"><span class="comment">// com.android.build.gradle.internal.transforms.InstantRunTransform</span>
+
+<span class="comment">/**</span>
+<span class="comment">     * Use asm to generate a concrete subclass of the AppPathLoaderImpl class.</span>
+<span class="comment">     * It only implements one method :</span>
+<span class="comment">     *      String[] getPatchedClasses();</span>
+<span class="comment">     *</span>
+<span class="comment">     * The method is supposed to return the list of classes that were patched in this iteration.</span>
+<span class="comment">     * This will be used by the InstantRun runtime to load all patched classes and register them</span>
+<span class="comment">     * as overrides on the original classes.2 class files.</span>
+<span class="comment">     *</span>
+<span class="comment">     * <span class="doctag">@param</span> patchFileContents list of patched class names.</span>
+<span class="comment">     * <span class="doctag">@param</span> outputDir output directory where to generate the .class file in.</span>
+<span class="comment">     */</span>
+    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">writePatchFileContents</span><span class="params">(</span></span>
+<span class="function"><span class="params">            @NonNull ImmutableList&lt;String&gt; patchFileContents, @NonNull File outputDir, <span class="keyword">long</span> buildId)</span> </span>{
+
+        ClassWriter cw = <span class="keyword">new</span> ClassWriter(<span class="number">0</span>);
+        MethodVisitor mv;
+
+        cw.visit(Opcodes.V1_6, Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER,
+                IncrementalVisitor.APP_PATCHES_LOADER_IMPL, <span class="keyword">null</span>,
+                IncrementalVisitor.ABSTRACT_PATCHES_LOADER_IMPL, <span class="keyword">null</span>);
+
+        <span class="comment">// Add the build ID to force the patch file to be repackaged.</span>
+        cw.visitField(Opcodes.ACC_PUBLIC + Opcodes.ACC_STATIC + Opcodes.ACC_FINAL,
+                <span class="string">"BUILD_ID"</span>, <span class="string">"J"</span>, <span class="keyword">null</span>, buildId);
+
+        {
+            mv = cw.visitMethod(Opcodes.ACC_PUBLIC, <span class="string">"&lt;init&gt;"</span>, <span class="string">"()V"</span>, <span class="keyword">null</span>, <span class="keyword">null</span>);
+            mv.visitCode();
+            mv.visitVarInsn(Opcodes.ALOAD, <span class="number">0</span>);
+            mv.visitMethodInsn(Opcodes.INVOKESPECIAL,
+                    IncrementalVisitor.ABSTRACT_PATCHES_LOADER_IMPL,
+                    <span class="string">"&lt;init&gt;"</span>, <span class="string">"()V"</span>, <span class="keyword">false</span>);
+            mv.visitInsn(Opcodes.RETURN);
+            mv.visitMaxs(<span class="number">1</span>, <span class="number">1</span>);
+            mv.visitEnd();
+        }
+        {
+            mv = cw.visitMethod(Opcodes.ACC_PUBLIC,
+                    <span class="string">"getPatchedClasses"</span>, <span class="string">"()[Ljava/lang/String;"</span>, <span class="keyword">null</span>, <span class="keyword">null</span>);
+            mv.visitCode();
+            mv.visitIntInsn(Opcodes.BIPUSH, patchFileContents.size());
+            mv.visitTypeInsn(Opcodes.ANEWARRAY, <span class="string">"java/lang/String"</span>);
+            <span class="keyword">for</span> (<span class="keyword">int</span> index=<span class="number">0</span>; index &lt; patchFileContents.size(); index++) {
+                mv.visitInsn(Opcodes.DUP);
+                mv.visitIntInsn(Opcodes.BIPUSH, index);
+                mv.visitLdcInsn(patchFileContents.get(index));
+                mv.visitInsn(Opcodes.AASTORE);
+            }
+            mv.visitInsn(Opcodes.ARETURN);
+            mv.visitMaxs(<span class="number">4</span>, <span class="number">1</span>);
+            mv.visitEnd();
+        }
+        cw.visitEnd();
+
+        <span class="keyword">byte</span>[] classBytes = cw.toByteArray();
+        File outputFile = <span class="keyword">new</span> File(outputDir, IncrementalVisitor.APP_PATCHES_LOADER_IMPL + <span class="string">".class"</span>);
+        <span class="keyword">try</span> {
+            Files.createParentDirs(outputFile);
+            Files.write(classBytes, outputFile);
+        } <span class="keyword">catch</span> (IOException e) {
+            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e);
+        }
+    }</code></pre>
+<p>上面这部分主要讲了一些AS和gradle插件配合相关的源码。</p>
+<h2 id="插桩和patch生成"><a href="#插桩和patch生成" class="headerlink" title="插桩和patch生成"></a>插桩和patch生成</h2><p>下面重点关注下实际插桩的实现。</p>
+<p>插桩的代码在上面提到的<code>build-system/instant-run-instrumentation</code>，实际的实现是通过<a href="https://asm.ow2.io/">ASM</a>直接操作字节码。</p>
+<p>ASM操作字节码的代码都是通过各种助记符操作，不易阅读。</p>
+<p><code>IncrementalSupportVisitor</code>负责操作原始代码，修改为有插桩的代码</p>
+<p><code>IncrementalChangeVisitor</code>负责把改动的代码生成patch，实际就是<code>{原始类名}$override</code></p>
+<p>这两个类的逻辑在gradle插件的com.android.build.gradle.internal.transforms.InstantRunTransform中被调用。gradle插件区分了要处理的类是变动过、新增、删除、还是没变。</p>
+<p>先看下<code>IncrementalSupportVisitor</code>：</p>
+<p>主要工作就是插入<code>$change</code>变量，和重定向所有方法到<code>$override</code>上</p>
+<pre><code class="java"><span class="comment">// IncrementalSupportVisitor.java</span>
+
+<span class="comment">/**</span>
+<span class="comment"> * Ensures that the class contains a $change field used for referencing the IncrementalChange</span>
+<span class="comment"> * dispatcher.</span>
+<span class="comment"> *</span>
+<span class="comment"> * &lt;p&gt;Also updates package_private visibility to public so we can call into this class from</span>
+<span class="comment"> * outside the package.</span>
+<span class="comment"> */</span>
+<span class="meta">@Override</span>
+<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">visit</span><span class="params">(<span class="keyword">int</span> version, <span class="keyword">int</span> access, String name, String signature, String superName,</span></span>
+<span class="function"><span class="params">        String[] interfaces)</span> </span>{
+    visitedClassName = name;
+    visitedSuperName = superName;
+    isInterface = (access &amp; Opcodes.ACC_INTERFACE) != <span class="number">0</span>;
+    <span class="keyword">int</span> fieldAccess =
+            isInterface
+                    ? Opcodes.ACC_PUBLIC
+                            | Opcodes.ACC_STATIC
+                            | Opcodes.ACC_SYNTHETIC
+                            | Opcodes.ACC_FINAL
+                    : Opcodes.ACC_PUBLIC
+                            | Opcodes.ACC_STATIC
+                            | Opcodes.ACC_VOLATILE
+                            | Opcodes.ACC_SYNTHETIC
+                            | Opcodes.ACC_TRANSIENT;
+    <span class="comment">// when dealing with interfaces, the $change field is an AtomicReference to the CHANGE_TYPE</span>
+    <span class="comment">// since fields in interface must be final. For classes, it's the CHANGE_TYPE directly.</span>
+    <span class="keyword">if</span> (isInterface) {
+        <span class="keyword">super</span>.visitField(
+                fieldAccess,
+                <span class="string">"$change"</span>,
+                getRuntimeTypeName(Type.getType(AtomicReference.class)),
+                <span class="keyword">null</span>,
+                <span class="keyword">null</span>);
+    } <span class="keyword">else</span> {
+        <span class="keyword">super</span>.visitField(fieldAccess, <span class="string">"$change"</span>, getRuntimeTypeName(CHANGE_TYPE), <span class="keyword">null</span>, <span class="keyword">null</span>);
+    }
+    access = transformClassAccessForInstantRun(access);
+    <span class="keyword">super</span>.visit(version, access, name, signature, superName, interfaces);
+}</code></pre>
+<p>这个方法插入了<code>public static volatile transient com.android.tools.ir.runtime.IncrementalChange $change</code></p>
+<pre><code class="java"><span class="comment">// Redirection.java</span>
+
+<span class="comment">/**</span>
+<span class="comment">     * Adds the instructions to do a generic redirection.</span>
+<span class="comment">     * &lt;p&gt;</span>
+<span class="comment">     * Note that the generated bytecode does not have a direct translation to code, but as an</span>
+<span class="comment">     * example, the following code block gets inserted.</span>
+<span class="comment">     * &lt;code&gt;</span>
+<span class="comment">     * if ($change != null) {</span>
+<span class="comment">     *   $change.access$dispatch($name, new object[] { arg0, ... argsN })</span>
+<span class="comment">     *   $anyCodeInsertedbyRestore</span>
+<span class="comment">     * }</span>
+<span class="comment">     * $originalMethodBody</span>
+<span class="comment">     *&lt;/code&gt;</span>
+<span class="comment">     * <span class="doctag">@param</span> mv the method visitor to add the instructions to.</span>
+<span class="comment">     * <span class="doctag">@param</span> change the local variable containing the alternate implementation.</span>
+<span class="comment">     */</span>
+    <span class="function"><span class="keyword">void</span> <span class="title">redirect</span><span class="params">(GeneratorAdapter mv, <span class="keyword">int</span> change)</span> </span>{
+        <span class="comment">// code to check if a new implementation of the current class is available.</span>
+        Label l0 = <span class="keyword">new</span> Label();
+        mv.loadLocal(change);
+        mv.visitJumpInsn(Opcodes.IFNULL, l0);
+
+        doRedirect(mv, change);
+
+        <span class="comment">// Return</span>
+        <span class="keyword">if</span> (type == Type.VOID_TYPE) {
+            mv.pop();
+        } <span class="keyword">else</span> {
+            ByteCodeUtils.unbox(mv, type);
+        }
+        mv.returnValue();
+
+        <span class="comment">// jump label for classes without any new implementation, just invoke the original</span>
+        <span class="comment">// method implementation.</span>
+        mv.visitLabel(l0);
+    }</code></pre>
+<p>这个方法插入做了重定向的工作。</p>
+<p>还有一个值得一提的是，<code>{原始类名}$override</code>类重新分发方法是通过方法签名来区分的，通过StringSwitch，又把方法签名的字符串比较变成了签名hash后的switch case，应该能节省大量的方法签名常量的储存成本。</p>
+<p>其他不一一列举了。</p>
+<h2 id="patch注入"><a href="#patch注入" class="headerlink" title="patch注入"></a>patch注入</h2><p>产物生成了，还需要实现把产物push到设备上，并修改之前插桩时预留的参数。</p>
+<p>前面说过，从instant-run代码的分包很容易看出它是C/S架构的。在patch注入这个过程中，server驻留在app中，client通过AS被调用，通过pushPatches完成patch生效。</p>
+<p>server从InstantRunContentProvider的onCreate生命周期入口开始，关键的代码如下：</p>
+<pre><code class="java"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">startServer</span><span class="params">()</span> </span>{
+  <span class="keyword">try</span> {
+    Thread socketServerThread = <span class="keyword">new</span> Thread(<span class="keyword">new</span> SocketServerThread());
+    socketServerThread.start();
+  } <span class="keyword">catch</span> (Throwable e) {
+    <span class="comment">// Make sure an exception doesn't cause the rest of the user's</span>
+    <span class="comment">// onCreate() method to be invoked</span>
+    <span class="keyword">if</span> (Log.isLoggable(Logging.LOG_TAG, Log.ERROR)) {
+      Log.e(Logging.LOG_TAG, <span class="string">"Fatal error starting Instant Run server"</span>, e);
+    }
+  }
+}
+
+<span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">SocketServerThread</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>{
+  <span class="meta">@Override</span>
+  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+    <span class="keyword">if</span> (POST_ALIVE_STATUS) {
+      <span class="keyword">final</span> Handler handler = <span class="keyword">new</span> Handler();
+      Timer timer = <span class="keyword">new</span> Timer();
+      TimerTask task =
+        <span class="keyword">new</span> TimerTask() {
+        <span class="meta">@Override</span>
+        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+          handler.post(
+            <span class="keyword">new</span> Runnable() {
+              <span class="meta">@Override</span>
+              <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
+                Log.v(
+                  Logging.LOG_TAG,
+                  <span class="string">"Instant Run server still here..."</span>);
+              }
+            });
+        }
+      };
+
+      timer.schedule(task, <span class="number">1</span>, <span class="number">30000L</span>);
+    }
+
+    <span class="keyword">while</span> (<span class="keyword">true</span>) {
+      <span class="keyword">try</span> {
+        LocalServerSocket serverSocket = Server.<span class="keyword">this</span>.serverSocket;
+        <span class="keyword">if</span> (serverSocket == <span class="keyword">null</span>) {
+          <span class="keyword">break</span>; <span class="comment">// stopped?</span>
+        }
+        LocalSocket socket = serverSocket.accept();
+
+        <span class="keyword">if</span> (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
+          Log.v(
+            Logging.LOG_TAG,
+            <span class="string">"Received connection from IDE: spawning connection thread"</span>);
+        }
+
+        SocketServerReplyThread socketServerReplyThread = <span class="keyword">new</span> SocketServerReplyThread(
+          socket);
+        socketServerReplyThread.run();
+
+        <span class="keyword">if</span> (wrongTokenCount &gt; <span class="number">50</span>) {
+          <span class="keyword">if</span> (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
+            Log.v(
+              Logging.LOG_TAG,
+              <span class="string">"Stopping server: too many wrong token connections"</span>);
+          }
+          Server.<span class="keyword">this</span>.serverSocket.close();
+          <span class="keyword">break</span>;
+        }
+      } <span class="keyword">catch</span> (Throwable e) {
+        <span class="keyword">if</span> (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
+          Log.v(
+            Logging.LOG_TAG,
+            <span class="string">"Fatal error accepting connection on local socket"</span>,
+            e);
+        }
+      }
+    }
+  }
+}</code></pre>
+<p>在新线程里启动一个socket，等待client的数据。类似其他一些模型，首先会先校验有效性。一接到数据会先校验一个magicNumber和version，然后就是各种类型的数据传递：</p>
+<p><img src="protocal.png" alt="protocal"></p>
+<pre><code class="java"><span class="comment">// Server.java</span>
+
+<span class="keyword">long</span> magic = input.readLong();
+            <span class="keyword">if</span> (magic != PROTOCOL_IDENTIFIER) {
+                Log.w(Logging.LOG_TAG, <span class="string">"Unrecognized header format "</span> + Long.toHexString(magic));
+                <span class="keyword">return</span>;
+            }
+            <span class="keyword">int</span> version = input.readInt();
+
+            <span class="comment">// Send current protocol version to the IDE so it can decide what to do</span>
+            output.writeInt(PROTOCOL_VERSION);
+
+            <span class="keyword">if</span> (version != PROTOCOL_VERSION) {
+                Log.w(
+                        Logging.LOG_TAG,
+                        <span class="string">"Mismatched protocol versions; app is "</span>
+                                + <span class="string">"using version "</span>
+                                + PROTOCOL_VERSION
+                                + <span class="string">" and tool is using version "</span>
+                                + version);
+                <span class="keyword">return</span>;
+            }
+
+            <span class="keyword">while</span> (<span class="keyword">true</span>) {
+                <span class="keyword">int</span> message = input.readInt();
+                <span class="keyword">switch</span> (message) {
+                    <span class="keyword">case</span> MESSAGE_EOF:
+</code></pre>
+<p>然后InstantRunClient#pushPatches在AS端被调用，向上面server的socket传递数据，实际是通过adb做到的。patch文件通过bytes写入socket的server端，消息类型的判断在上面的代码里，文件数据流的读取在<code>ApplicationPatch#read</code>中，文件数据类流的写在<code>ApplicationPatchUtil#write</code></p>
+<pre><code class="java"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">write</span><span class="params">(@NonNull DataOutputStream output, @NonNull ApplicationPatch change)</span></span>
+<span class="function">        <span class="keyword">throws</span> IOException </span>{
+    output.writeUTF(change.path);
+    <span class="keyword">byte</span>[] bytes = change.data;
+    output.writeInt(bytes.length);
+    output.write(bytes);
+}</code></pre>
+<p>patch传输完后，就会通过AbstractPatchesLoaderImpl的load方法实际加载使patch生效。</p>
+<pre><code class="java"><span class="comment">// AbstractPatchesLoaderImpl</span>
+<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">load</span><span class="params">()</span> </span>{
+        <span class="keyword">for</span> (String className : getPatchedClasses()) {
+            <span class="keyword">try</span> {
+                ClassLoader cl = getClass().getClassLoader();
+                Class&lt;?&gt; aClass = cl.loadClass(className + <span class="string">"$override"</span>);
+                Object o = aClass.newInstance();
+
+                Class&lt;?&gt; originalClass = cl.loadClass(className);
+                Field changeField = originalClass.getDeclaredField(<span class="string">"$change"</span>);
+                <span class="comment">// force the field accessibility as the class might not be "visible"</span>
+                <span class="comment">// from this package.</span>
+                changeField.setAccessible(<span class="keyword">true</span>);
+
+                Object previous =
+                        originalClass.isInterface()
+                                ? patchInterface(changeField, o)
+                                : patchClass(changeField, o);
+
+                <span class="comment">// If there was a previous change set, mark it as obsolete:</span>
+                <span class="keyword">if</span> (previous != <span class="keyword">null</span>) {
+                    Field isObsolete = previous.getClass().getDeclaredField(<span class="string">"$obsolete"</span>);
+                    <span class="keyword">if</span> (isObsolete != <span class="keyword">null</span>) {
+                        isObsolete.set(<span class="keyword">null</span>, <span class="keyword">true</span>);
+                    }
+                }
+
+                <span class="keyword">if</span> (logging != <span class="keyword">null</span> &amp;&amp; logging.isLoggable(Level.FINE)) {
+                    logging.log(Level.FINE, String.format(<span class="string">"patched %s"</span>, className));
+                }
+            } <span class="keyword">catch</span> (Exception e) {
+                <span class="keyword">if</span> (logging != <span class="keyword">null</span>) {
+                    logging.log(
+                            Level.SEVERE,
+                            String.format(<span class="string">"Exception while patching %s"</span>, className),
+                            e);
+                }
+                <span class="keyword">return</span> <span class="keyword">false</span>;
+            }
+        }
+        <span class="keyword">return</span> <span class="keyword">true</span>;
+    }</code></pre>
+<p>逻辑不复杂，就是把所有有代码改动的类的<code>$override</code>通过反射替换掉。改动类通过getPatchedClasses()提供，getPatchedClasses的实际实现签名说过是由gradle具体生成的。</p>
+<p>一旦<code>$override</code>替换成了新的改动类，那么改动就生效了。可以再看下原理篇的分析。</p>
+<p><strong>下一篇尝试通过Instant Run的原理，一步一步实现一个自己的hotfix框架。</strong></p>
